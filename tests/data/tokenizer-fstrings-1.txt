@@ -1,0 +1,5 @@
+[
+    Token(type=FSTRING_START, value="f'", start=0, end=2),
+    Token(type=FSTRING_MIDDLE, value="test", start=6, end=10),
+    Token(type=FSTRING_END, value="'", start=6, end=7),
+]

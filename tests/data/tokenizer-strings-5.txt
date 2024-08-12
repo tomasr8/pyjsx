@@ -1,0 +1,6 @@
+[
+    Token(
+        type=MULTI_LINE_STRING, value='rB"""\n<div {...x}>\n    Neither this\n    {1+2}\n</div>\n"""', start=0, end=56
+    ),
+    Token(type=WS, value="\n", start=56, end=57),
+]

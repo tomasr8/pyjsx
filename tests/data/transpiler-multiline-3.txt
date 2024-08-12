@@ -1,0 +1,13 @@
+def Header(props):
+    title = props["title"]
+    return jsx("h1", {'data-x': "123", 'style': {'font-size': '12px'}}, [title])
+
+
+def Body(props):
+    return jsx("div", {'class': "body"}, [props["children"]])
+
+
+def App():
+    return (
+        jsx(Body, {}, ["some text", jsx(Header, {'title': "Home"}, []), "more text"])
+    )

@@ -1,0 +1,15 @@
+[
+    Token(type=FSTRING_START, value='f"', start=0, end=2),
+    Token(type=FSTRING_MIDDLE, value="Hello, ", start=9, end=16),
+    Token(type=OP, value="{", start=9, end=10),
+    Token(type=JSX_OPEN, value="<", start=10, end=11),
+    Token(type=ELEMENT_NAME, value="b", start=11, end=12),
+    Token(type=JSX_CLOSE, value=">", start=12, end=13),
+    Token(type=JSX_TEXT, value="world", start=13, end=18),
+    Token(type=JSX_SLASH_OPEN, value="</", start=18, end=20),
+    Token(type=ELEMENT_NAME, value="b", start=20, end=21),
+    Token(type=JSX_CLOSE, value=">", start=21, end=22),
+    Token(type=OP, value="}", start=22, end=23),
+    Token(type=FSTRING_MIDDLE, value="!", start=24, end=25),
+    Token(type=FSTRING_END, value='"', start=24, end=25),
+]

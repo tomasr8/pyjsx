@@ -1,0 +1,11 @@
+[
+    Token(type=FSTRING_START, value='f"', start=0, end=2),
+    Token(type=OP, value="{", start=2, end=3),
+    Token(type=FSTRING_START, value='f"', start=3, end=5),
+    Token(type=OP, value="{", start=5, end=6),
+    Token(type=ANY, value="1", start=6, end=7),
+    Token(type=OP, value="}", start=7, end=8),
+    Token(type=FSTRING_END, value='"', start=8, end=9),
+    Token(type=OP, value="}", start=9, end=10),
+    Token(type=FSTRING_END, value='"', start=10, end=11),
+]

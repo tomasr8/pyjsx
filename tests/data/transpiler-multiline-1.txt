@@ -1,0 +1,1 @@
+jsx("div", {}, ["Click", jsx("button", {}, ["here"]), "or", jsx("a", {'href': "example.com"}, ["there"])])

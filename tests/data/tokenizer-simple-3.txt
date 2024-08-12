@@ -1,0 +1,1 @@
+[Token(type=JSX_FRAGMENT_OPEN, value="<>", start=0, end=2), Token(type=JSX_FRAGMENT_CLOSE, value="</>", start=2, end=5)]

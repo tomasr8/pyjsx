@@ -1,0 +1,4 @@
+[
+    Token(type=MULTI_LINE_STRING, value="'''\n<>This should not be transpiled</>\n'''", start=0, end=42),
+    Token(type=WS, value="\n", start=42, end=43),
+]
