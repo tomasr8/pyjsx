@@ -4,7 +4,7 @@ from subprocess import PIPE, Popen
 
 import pytest
 
-from pyjsx.tokenizer import Tokenizer
+from pyjsx.tokenizer import Tokenizer, TokenizerError
 
 
 def ruff_format(source):
@@ -170,3 +170,21 @@ def test_fstrings(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-fstrings-{request.node.callspec.id}.txt")
+
+
+@pytest.mark.parametrize(
+    ("source", "error_msg"),
+    [
+        ('"""', 'Error at line 1:\n"""\n^^^\nUnterminated string'),
+        ("'''", "Error at line 1:\n'''\n^^^\nUnterminated string"),
+        ('"', 'Error at line 1:\n"\n^\nUnterminated string'),
+        ("'", "Error at line 1:\n'\n^\nUnterminated string"),
+    ],
+    ids=itertools.count(1),
+)
+def test_errors(source, error_msg):
+    tokenizer = Tokenizer(source)
+
+    with pytest.raises(TokenizerError) as excinfo:
+        list(tokenizer.tokenize())
+    assert str(excinfo.value) == error_msg

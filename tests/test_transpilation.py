@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-import pyjsx
 from pyjsx.transpiler import transpile
 
 
@@ -200,9 +199,20 @@ def test_string_escapes(source):
     assert transpile(source) == source
 
 
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ('<li>"quoted text"</li>', 'jsx("li", {}, ["\\"quoted text\\""])'),
+    ],
+)
+def test_jsx_text_escapes(source, expected):
+    assert transpile(source) == expected
+
+
 def _get_stdlib_python_modules():
     modules = sys.stdlib_module_names
     for name in modules:
+        module = None
         with contextlib.suppress(Exception):
             module = __import__(name)
 

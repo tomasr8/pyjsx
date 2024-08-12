@@ -3,6 +3,8 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from enum import StrEnum
 
+from pyjsx.util import get_line_number_offset, highlight_line
+
 
 ELEMENT_NAME = re.compile(r"^[_a-zA-Z]\w*(?:\.[_a-zA-Z]\w*)*")
 ATTRIBUTE_NAME = re.compile(r"^[^\s='\"<>{}]+")
@@ -35,10 +37,8 @@ class TokenType(StrEnum):
     JSX_TEXT = "JSX_TEXT"
     JSX_OPEN_BRACE = "JSX_OPEN_BRACE"
     JSX_CLOSE_BRACE = "JSX_CLOSE_BRACE"
-    STRING = "STRING"
     ATTRIBUTE = "ATTRIBUTE"
     ATTRIBUTE_VALUE = "ATTRIBUTE_VALUE"
-    ERROR = "ERROR"
     WS = "WS"
     COMMENT = "COMMENT"
     SINGLE_LINE_STRING = "SINGLE_LINE_STRING"
@@ -62,7 +62,6 @@ class Token:
 
 @dataclass
 class JSXMode:
-    mode: str = "jsx"
     angle_brackets: int = 0
     is_inside_open_tag: bool = False
     is_inside_closing_tag: bool = False
@@ -73,7 +72,6 @@ class JSXMode:
 
 @dataclass
 class PYMode:
-    mode: str = "py"
     curly_brackets: int = 0
     inside_jsx: bool = False
     inside_fstring: bool = False
@@ -82,7 +80,6 @@ class PYMode:
 
 @dataclass
 class FStringMode:
-    mode: str = "fstring"
     start: str = ""
 
 
@@ -90,6 +87,14 @@ class TokenizerError(Exception):
     pass
 
 
+def make_error_message(msg: str, source: str, start: int, end: int) -> str:
+    line_number, offset = get_line_number_offset(source, start, end)
+    highlighted = highlight_line(source, start, end)
+
+    return f"Error at line {line_number}:\n{highlighted}\n{msg}"
+
+
+# Yes, the code is pretty bad, but I didn't feel like refactoring it..
 class Tokenizer:
     def __init__(self, source: str, curr: int = 0):
         self.source = source
@@ -102,10 +107,9 @@ class Tokenizer:
 
     def tokenize(self) -> Generator[Token, None, None]:
         while self.curr < len(self.source):
-            # print(self.curr, self.mode.mode, print(self.source[self.curr : self.curr+50]))
-            if self.mode.mode == "py":
+            if isinstance(self.mode, PYMode):
                 yield from self.tokenize_py()
-            elif self.mode.mode == "jsx":
+            elif isinstance(self.mode, JSXMode):
                 yield from self.tokenize_jsx()
                 if isinstance(self.mode, JSXMode) and self.mode.angle_brackets == 0:
                     self.modes.pop()
@@ -114,7 +118,8 @@ class Tokenizer:
 
     def tokenize_jsx(self) -> Generator[Token, None, None]:
         assert isinstance(self.mode, JSXMode)
-        if self.source[self.curr : self.curr + 3] in {"</>"}:
+
+        if self.source[self.curr : self.curr + 3] == "</>":
             self.mode.angle_brackets -= 1
             yield Token(
                 TokenType.JSX_FRAGMENT_CLOSE,
@@ -177,7 +182,7 @@ class Tokenizer:
         elif self.mode.is_inside_open_tag or self.mode.is_inside_closing_tag:
             if match := WS.match(self.source[self.curr :]):
                 self.curr += len(match.group())
-            elif self.mode.is_inside_open_tag and self.source[self.curr] in {"="}:
+            elif self.mode.is_inside_open_tag and self.source[self.curr] == "=":
                 yield Token(TokenType.OP, self.source[self.curr], self.curr, self.curr + 1)
                 self.curr += 1
             elif self.mode.expects_element_name and (match := ELEMENT_NAME.match(self.source[self.curr :])):
@@ -216,7 +221,6 @@ class Tokenizer:
             self.mode.prev_token = match.group()
         elif match := MULTI_LINE_STRING_START.match(self.source[self.curr :]):
             start = match.group(1)
-            # print("MULTI", self.curr, start)
             start_index = self.curr
             self.curr += len(match.group())
             string = match.group()
@@ -232,7 +236,6 @@ class Tokenizer:
                     string += '\\"'
                     self.curr += 2
                 elif self.source[self.curr : self.curr + 3] == start:
-                    # print("FOUND", self.curr, self.source[self.curr : self.curr + 3])
                     string += start
                     self.curr += 3
                     found = True
@@ -242,10 +245,10 @@ class Tokenizer:
                     self.curr += 1
 
             if not found:
-                # print("SOURCE>", start, self.source[self.curr :])
-                msg = "Unterminated string"
+                msg = make_error_message(
+                    "Unterminated string", self.source, start_index, start_index + len(match.group())
+                )
                 raise TokenizerError(msg)
-            # print("STRING>", string)
             yield Token(TokenType.MULTI_LINE_STRING, string, start_index, self.curr)
             self.mode.prev_token = string
         elif match := SINGLE_LINE_STRING_START.match(self.source[self.curr :]):
@@ -255,7 +258,6 @@ class Tokenizer:
             string = match.group()
             found = False
             while self.curr < len(self.source):
-                # print(self.source[self.curr :])
                 if self.source[self.curr : self.curr + 2] == "\\\\":
                     string += "\\\\"
                     self.curr += 2
@@ -275,7 +277,9 @@ class Tokenizer:
                     self.curr += 1
 
             if not found:
-                msg = "Unterminated string"
+                msg = make_error_message(
+                    "Unterminated string", self.source, start_index, start_index + len(match.group())
+                )
                 raise TokenizerError(msg)
             yield Token(TokenType.SINGLE_LINE_STRING, string, start_index, self.curr)
             self.mode.prev_token = string
@@ -287,10 +291,6 @@ class Tokenizer:
             yield Token(TokenType.FSTRING_START, string, start_index, self.curr)
             self.mode.prev_token = string
             self.modes.append(FStringMode(start=start))
-        # elif match := SINGLE_LINE_STRING.match(self.source[self.curr :]):
-        #     yield Token(TokenType.STRING, match.group(), self.curr, self.curr + len(match.group()))
-        #     self.curr += len(match.group())
-        #     self.mode.prev_token = match.group()
         elif self.source[self.curr] in {":", "(", "[", ",", "=", ":=", "->"}:
             yield Token(TokenType.OP, self.source[self.curr], self.curr, self.curr + 1)
             self.mode.prev_token = self.source[self.curr]
@@ -310,18 +310,13 @@ class Tokenizer:
             self.curr += 1
         elif self.source[self.curr] == "}":
             self.mode.curly_brackets -= 1
-            if (
-                self.mode.mode == "py"
-                and (self.mode.inside_jsx or self.mode.inside_fstring)
-                and self.mode.curly_brackets == 0
-            ):
+            if (self.mode.inside_jsx or self.mode.inside_fstring) and self.mode.curly_brackets == 0:
                 self.modes.pop()
             else:
                 yield Token(TokenType.OP, self.source[self.curr], self.curr, self.curr + 1)
                 self.mode.prev_token = self.source[self.curr]
                 self.curr += 1
         elif self.source[self.curr] == "<":
-            # print("MAYBE JSX?", self.mode.prev_token)
             if not self.mode.prev_token or self.mode.prev_token in {
                 "{",
                 ":",
@@ -345,10 +340,6 @@ class Tokenizer:
             yield Token(TokenType.NAME, match.group(), self.curr, self.curr + len(match.group()))
             self.curr += len(match.group())
             self.mode.prev_token = match.group()
-        # elif match := EXPR_KEYWORDS.match(self.source[self.curr :]):
-        # yield Token(TokenType.NAME, match.group(), self.curr, self.curr + len(match.group()))
-        # self.curr += len(match.group())
-        # self.mode.prev_token = match.group()
         else:
             yield Token(TokenType.ANY, self.source[self.curr], self.curr, self.curr + 1)
             self.mode.prev_token = self.source[self.curr]

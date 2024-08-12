@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from io import StringIO
+from typing import Any
 
 from pyjsx.elements import is_builtin_element
 from pyjsx.tokenizer import Token, Tokenizer, TokenType
+
+
+UNESCAPED_QUOTES = re.compile(r'(?<!\\)"')
+
+
+class ParseError(Exception):
+    pass
 
 
 @dataclass
@@ -46,7 +55,8 @@ class JSXElement:
                         curr = {}
                     condensed.append(value)
                 case _:
-                    raise Exception("Invalid attribute")
+                    msg = "Invalid attribute"
+                    raise ParseError(msg)
         if curr:
             condensed.append(curr)
 
@@ -57,7 +67,7 @@ class JSXElement:
         return f"jsx({tag}, {attributes}, [{children}])"
 
 
-def sringify_attribute_dict(attrs):
+def sringify_attribute_dict(attrs: dict[str, Any]) -> str:
     if isinstance(attrs, JSXExpression | JSXElement | JSXFragment):
         return f"({attrs})"
     if not attrs:
@@ -71,8 +81,8 @@ class JSXText:
     value: str
 
     def __str__(self):
-        # TODO: escape quotes
-        return f'"{self.value}"'
+        value = re.sub(UNESCAPED_QUOTES, '\\"', self.value)
+        return f'"{value}"'
 
 
 @dataclass
@@ -84,7 +94,7 @@ class JSXExpression:
 
 
 class TokenQueue:
-    def __init__(self, tokens, offset=0, raw=""):
+    def __init__(self, tokens: list[Token], offset: int = 0, raw: str = ""):
         self.tokens = list(tokens)
         self.raw = raw
         self.curr = offset
@@ -99,34 +109,32 @@ class TokenQueue:
             return None
         return self.tokens[self.curr + 1]
 
-    def peek_type(self, typ, value=None) -> Token | None:
+    def peek_type(self, typ: TokenType, value: str | None = None) -> Token | None:
         token = self.peek()
         if token and token.type == typ and (not value or token.value == value):
             return token
         return None
 
-    def peek_type2(self, typ, value=None) -> Token | None:
+    def peek_type2(self, typ: TokenType, value: str | None = None) -> Token | None:
         token = self.peek2()
         if token and token.type == typ and (not value or token.value == value):
             return token
         return None
 
-    def pop(self, typ=None, string=None) -> Token:
+    def pop(self, typ: TokenType | None = None) -> Token:
         if self.curr >= len(self.tokens):
-            raise Exception("No more tokens")
+            msg = "No more tokens"
+            raise ParseError(msg)
 
         self.curr += 1
         token = self.tokens[self.curr - 1]
-        if (typ and token.type != typ) or (string and token.value != string):
-            raise Exception(f"Expected {typ}, got {token.type}, {string}, {token.value}")
+        if typ and token.type != typ:
+            msg = f"Expected {typ}, got {token.type}, {token.value}"
+            raise ParseError(msg)
         return token
 
-    def pop_type(self, typ) -> Token:
+    def pop_type(self, typ: TokenType) -> Token:
         return self.pop(typ=typ)
-
-
-class ParseException(Exception):
-    pass
 
 
 def parse_jsx(queue: TokenQueue) -> JSXElement | JSXFragment:
@@ -135,7 +143,7 @@ def parse_jsx(queue: TokenQueue) -> JSXElement | JSXFragment:
     if queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
         return parse_jsx_fragment(queue)
     msg = f"Unexpected token {queue.peek()}"
-    raise ParseException(msg)
+    raise ParseError(msg)
 
 
 def parse_jsx_element(queue: TokenQueue) -> JSXElement:
@@ -156,7 +164,7 @@ def parse_jsx_element(queue: TokenQueue) -> JSXElement:
     closing_tag = queue.pop_type(TokenType.ELEMENT_NAME).value
     if closing_tag != name:
         msg = f"Expected closing tag {name}, got {closing_tag}"
-        raise ParseException(msg)
+        raise ParseError(msg)
     queue.pop_type(TokenType.JSX_CLOSE)
     return JSXElement(name, attributes, children)
 
@@ -205,8 +213,8 @@ def parse_jsx_attributes(queue: TokenQueue) -> list:
         elif queue.peek_type(TokenType.JSX_OPEN_BRACE) and queue.peek_type2(TokenType.JSX_SPREAD):
             attributes.append(parse_jsx_spread_attribute(queue))
         else:
-            msg = f"Unexpected token: {queue.peek()}"
-            raise ParseException(msg)
+            msg = f"Unexpected token while parsing JSX attributes: {queue.peek()}"
+            raise ParseError(msg)
     return attributes
 
 
@@ -233,8 +241,8 @@ def parse_jsx_attribute_value(queue: TokenQueue) -> str | JSXExpression | JSXEle
         return parse_jsx_element(queue)
     if queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
         return parse_jsx_fragment(queue)
-    msg = f"Unexpected token: {queue.peek()}"
-    raise ParseException(msg)
+    msg = f"Unexpected token while parsing JSX attribute value: {queue.peek()}"
+    raise ParseError(msg)
 
 
 def parse_python_expression(queue: TokenQueue, *, pop_spread: bool = False) -> JSXExpression:
@@ -260,17 +268,13 @@ class Transpiler:
 
     def transpile(self) -> str:
         tokens = list(self.tokenizer.tokenize())
-        # print("TOKENS", tokens)
         while self.curr < len(tokens):
             if tokens[self.curr].type not in {TokenType.JSX_OPEN, TokenType.JSX_FRAGMENT_OPEN}:
-                # print("ADDING", tokens[self.curr].value)
                 self.output.write(tokens[self.curr].value)
                 self.curr += 1
-            else:  # print("HERE!")
+            else:
                 queue = TokenQueue(tokens, self.curr, raw=self.source)
                 jsx = parse_jsx(queue)
-                # print("JSX", jsx)
-                # print("curr", queue.curr)
                 self.curr = queue.curr
                 self.output.write(str(jsx))
         return self.output.getvalue()

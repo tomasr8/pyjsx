@@ -1,0 +1,74 @@
+[project]
+name = "jsx-python"
+authors = [{ name = "Tomas Roun", email = "tomas.roun8@gmail.com" }]
+description = "JSX transpiler for Python"
+readme = "README.md"
+requires-python = ">=3.12"
+keywords = ["JSX", "React", "transpiler"]
+license = "MIT"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "twine",
+    "uv",
+    "pytest",
+    "pytest-snapshot",
+    "pytest-cov",
+    "ruff",
+    "pyright",
+]
+
+[project.urls]
+Homepage = "https://github.com/tomasr8/pyjsx"
+Github = "https://github.com/tomasr8/pyjsx"
+
+[tool.pyright]
+include = ["tests", "pyjsx"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",
+    "ANN002",
+    "ANN003",
+    "ANN101",
+    "ANN204",
+    "ANN401",
+    "COM812",
+    "BLE001",
+    "RET503",
+    "ISC001",
+    "N802",
+    "N803",
+    "N806",
+    "N818",
+    "S101",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201", "ANN202", "PLR2004"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.hatch.version]
+path = "pyjsx/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pyjsx"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
