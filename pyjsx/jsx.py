@@ -82,3 +82,4 @@ class _JSX:
 
 
 jsx = _JSX()
+type JSX = _JSXElement
