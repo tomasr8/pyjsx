@@ -7,7 +7,6 @@ import pytest
 
 def run_example(name: str):
     path = Path(__file__).parents[1] / "examples" / name / "main.py"
-    # print(path)
     return subprocess.run(  # noqa: S603
         [sys.executable, str(path)], text=True, check=True, capture_output=True
     ).stdout
@@ -23,8 +22,6 @@ def run_example(name: str):
 )
 def test_example(request, snapshot, example):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
-    # o = run_example(example)
-    # print(type(o))
     snapshot.assert_match(
         run_example(example), f"examples-{request.node.callspec.id}.txt"
     )

@@ -88,7 +88,7 @@ class TokenizerError(Exception):
 
 
 def make_error_message(msg: str, source: str, start: int, end: int) -> str:
-    line_number, offset = get_line_number_offset(source, start, end)
+    line_number, offset = get_line_number_offset(source, start)
     highlighted = highlight_line(source, start, end)
 
     return f"Error at line {line_number}:\n{highlighted}\n{msg}"
@@ -116,7 +116,7 @@ class Tokenizer:
             else:
                 yield from self.tokenize_fstring()
 
-    def tokenize_jsx(self) -> Generator[Token, None, None]:
+    def tokenize_jsx(self) -> Generator[Token, None, None]:  # noqa: C901, PLR0912, PLR0915
         assert isinstance(self.mode, JSXMode)
 
         if self.source[self.curr : self.curr + 3] == "</>":
@@ -210,7 +210,7 @@ class Tokenizer:
             msg = f"Unexpected token {self.source[self.curr:]}"
             raise TokenizerError(msg)
 
-    def tokenize_py(self) -> Generator[Token, None, None]:
+    def tokenize_py(self) -> Generator[Token, None, None]:  # noqa: C901, PLR0912, PLR0915
         assert isinstance(self.mode, PYMode)
         if match := WS.match(self.source[self.curr :]):
             yield Token(TokenType.WS, match.group(), self.curr, self.curr + len(match.group()))
@@ -345,7 +345,7 @@ class Tokenizer:
             self.mode.prev_token = self.source[self.curr]
             self.curr += 1
 
-    def tokenize_fstring(self):
+    def tokenize_fstring(self) -> Generator[Token, None, None]:
         assert isinstance(self.mode, FStringMode)
         start = self.mode.start
         if self.source[self.curr] == "{":

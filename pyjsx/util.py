@@ -13,7 +13,7 @@ def flatten(children: Iterable) -> Generator:
             yield child
 
 
-def get_line_number_offset(source: str, start: int, end: int) -> tuple[int, int]:
+def get_line_number_offset(source: str, start: int) -> tuple[int, int]:
     line_start = start
 
     while line_start > 0 and source[line_start - 1] != "\n":
