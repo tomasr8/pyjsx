@@ -75,7 +75,7 @@ any other file containing JSX.
 ## Supported grammar
 
 The full [JSX grammar](https://facebook.github.io/jsx/) is supported.
-Here are a few example:
+Here are a few examples:
 
 ### Normal and self-closing tags
 

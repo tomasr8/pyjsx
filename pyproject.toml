@@ -18,7 +18,6 @@ dynamic = ["version"]
 [project.optional-dependencies]
 dev = [
     "build",
-    "twine",
     "uv",
     "pytest",
     "pytest-snapshot",

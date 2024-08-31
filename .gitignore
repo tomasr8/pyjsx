@@ -5,6 +5,7 @@ htmlcov
 .coverage
 
 *.egg-info
+dist/
 
 venv
 .python-version
