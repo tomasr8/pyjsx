@@ -21,6 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install uv
           uv pip install --system -r requirements-dev.txt
+          uv pip install --system -e .[dev]
 
       - name: Lint code 🧹
         run: |
