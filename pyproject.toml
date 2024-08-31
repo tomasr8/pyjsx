@@ -32,6 +32,7 @@ Github = "https://github.com/tomasr8/pyjsx"
 
 [tool.pyright]
 include = ["tests", "pyjsx"]
+exclude = ["pyjsx/codecs.py"] # Typeshed has incorrect types for `CodecInfo.decode`
 
 [tool.ruff.lint]
 select = ["ALL"]
