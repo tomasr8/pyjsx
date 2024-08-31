@@ -6,29 +6,31 @@
 
 ```python
 # coding: jsx
-from pyjsx import jsx
+from pyjsx import jsx, JSX
 
-def get_body(title, href):
+def Header(children, style=None, **rest) -> JSX:
+    return <h1 style={style}>{children}</h1>
+
+def Main(children, **rest) -> JSX:
+    return <main>{children}</main>
+
+def App() -> JSX:
     return (
-        <body>
-            <h1>{title}</h1>
-            <p>
-                <a href={href}>"Click me!"</a>
-            </p>
-        </body>
+        <div>
+            <Header style={{"color": "red"}}>Hello, world!</Header>
+            <Main>
+                <p>This was rendered with PyJSX!</p>
+            </Main>
+        </div>
     )
-
-print(get_body("Title", "example.com"))
 ```
-
-language spec:" https://facebook.github.io/jsx/
 
 ## Installation
 
 Get it via pip:
 
 ```sh
-pip install jsx-python
+pip install python-jsx
 ```
 
 ## Minimal example
@@ -39,7 +41,7 @@ pip install jsx-python
 from pyjsx import jsx
 
 def hello():
-    print(<h1>Hello, world!</>)
+    print(<h1>Hello, world!</h1>)
 ```
 
 ```python
@@ -72,8 +74,8 @@ any other file containing JSX.
 
 ## Supported grammar
 
-In principle the full [JSX grammar](https://facebook.github.io/jsx/) except for
-some obscure cases is supported. Here's a non-exhaustive list:
+The full [JSX grammar](https://facebook.github.io/jsx/) is supported.
+Here are a few example:
 
 ### Normal and self-closing tags
 
@@ -111,12 +113,13 @@ fragment = (
 
 ### Custom components
 
-A custom component can be any function that takes a single argument props and
-returns JSX or a string.
+A custom component can be any function that takes `**kwargs` and
+returns JSX or a plain string. The special prop `children` is a list
+containing the element's children.
 
 ```python
-def Header(props):
-    return <h1>{props["children"]}</h1>
+def Header(children, **rest):
+    return <h1>{children}</h1>
 
 header = <Header>Title</Header>
 print(header)
