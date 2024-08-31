@@ -30,9 +30,16 @@ def test_fragments(source, expected):
         (jsx("div", {}, []), "<div></div>"),
         (jsx("div", {"foo": "bar"}, []), '<div foo="bar"></div>'),
         (jsx("input", {}, []), "<input />"),
-        (jsx("input", {"type": "number", "disabled": True}, []), '<input type="number" disabled />'),
         (
-            jsx("span", {"style": {"font-size": "14px", "font-weight": "bold"}}, ["text"]),
+            jsx("input", {"type": "number", "disabled": True}, []),
+            '<input type="number" disabled />',
+        ),
+        (
+            jsx(
+                "span",
+                {"style": {"font-size": "14px", "font-weight": "bold"}},
+                ["text"],
+            ),
             """\
 <span style="font-size: 14px; font-weight: bold">
     text
@@ -57,8 +64,8 @@ def test_builtins(source, expected):
 
 
 def test_custom_components():
-    def Component(props):
-        return jsx("div", {"class": "wrapper"}, props["children"])
+    def Component(children, **_):
+        return jsx("div", {"class": "wrapper"}, children)
 
     source = jsx(Component, {}, ["Hello, world!"])
     assert (
@@ -73,7 +80,10 @@ def test_custom_components():
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        (jsx("input", {"foo": '"should escape"'}, []), '<input foo="&quot;should escape&quot;" />'),
+        (
+            jsx("input", {"foo": '"should escape"'}, []),
+            '<input foo="&quot;should escape&quot;" />',
+        ),
     ],
 )
 def test_attribute_escapes(source, expected):

@@ -1,0 +1,10 @@
+<div>
+    <h1 style="color: red">
+        Hello, world!
+    </h1>
+    <main>
+        <p>
+            This was rendered with PyJSX!
+        </p>
+    </main>
+</div>

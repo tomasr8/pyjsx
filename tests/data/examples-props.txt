@@ -1,0 +1,28 @@
+<div>
+    <div style="border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)">
+        <img src="dog.jpg" alt="A picture of a dog" />
+        <h1>
+            Card title
+        </h1>
+        <p>
+            Card content
+        </p>
+    </div>
+    <div style="border-radius: 5px; box-shadow: none">
+        <img src="cat.jpg" alt="A picture of a cat" />
+        <h1>
+            Card title
+        </h1>
+        <p>
+            Card content
+        </p>
+    </div>
+    <div style="border-radius: 5px; box-shadow: none">
+        <h1>
+            Card title
+        </h1>
+        <p>
+            Card content
+        </p>
+    </div>
+</div>

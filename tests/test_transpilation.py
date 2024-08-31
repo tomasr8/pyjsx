@@ -183,7 +183,9 @@ def App():
 )
 def test_multiline(snapshot, request, source):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
-    snapshot.assert_match(transpile(source), f"transpiler-multiline-{request.node.callspec.id}.txt")
+    snapshot.assert_match(
+        transpile(source), f"transpiler-multiline-{request.node.callspec.id}.txt"
+    )
 
 
 @pytest.mark.parametrize(
@@ -212,6 +214,10 @@ def test_jsx_text_escapes(source, expected):
 def _get_stdlib_python_modules():
     modules = sys.stdlib_module_names
     for name in modules:
+        if name == "antigravity":
+            # Importing antigravity opens a web browser which is annoying when running tests
+            continue
+
         module = None
         with contextlib.suppress(Exception):
             module = __import__(name)

@@ -1,5 +1,5 @@
 [project]
-name = "jsx-python"
+name = "python-jsx"
 authors = [{ name = "Tomas Roun", email = "tomas.roun8@gmail.com" }]
 description = "JSX transpiler for Python"
 readme = "README.md"
