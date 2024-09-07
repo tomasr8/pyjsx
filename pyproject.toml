@@ -5,7 +5,7 @@ description = "JSX transpiler for Python"
 readme = "README.md"
 requires-python = ">=3.12"
 keywords = ["JSX", "React", "transpiler"]
-license = "MIT"
+license = "Apache-2.0"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
