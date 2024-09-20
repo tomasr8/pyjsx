@@ -3,7 +3,7 @@ name = "python-jsx"
 authors = [{ name = "Tomas Roun", email = "tomas.roun8@gmail.com" }]
 description = "JSX transpiler for Python"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10,<3.14"
 keywords = ["JSX", "React", "transpiler"]
 license = "Apache-2.0"
 classifiers = [
@@ -30,9 +30,19 @@ dev = [
 Homepage = "https://github.com/tomasr8/pyjsx"
 Github = "https://github.com/tomasr8/pyjsx"
 
+[tool.pytest.ini_options]
+testpaths = ["tests/"]
+
 [tool.pyright]
+venvPath = "."
+venv = ".venv"
 include = ["tests", "pyjsx"]
 exclude = ["pyjsx/codecs.py"] # Typeshed has incorrect types for `CodecInfo.decode`
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+include = ["pyproject.toml"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -57,9 +67,6 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ANN001", "ANN201", "ANN202", "PLR2004"]
 "examples/*" = ["I001", "F401"]
-
-[tool.ruff]
-line-length = 120
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
