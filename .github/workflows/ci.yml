@@ -18,19 +18,18 @@ jobs:
 
       - name: Install dependencies 📦
         run: |
-          python -m pip install --upgrade pip
-          pip install uv
-          uv pip install --system -r requirements-dev.txt
-          uv pip install --system -e .[dev]
+          python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+          python -m pip install --no-cache-dir uv
+          uv sync --all-extras
 
       - name: Lint code 🧹
         run: |
-          ruff check pyjsx/ tests/
+          uv run ruff check pyjsx/ tests/
 
       - name: Type check 🏷
         run: |
-          pyright
+          uv run pyright
 
       - name: Run tests 🧪
         run: |
-          pytest --no-cov
+          uv run pytest --no-cov
