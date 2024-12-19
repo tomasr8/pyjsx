@@ -1,0 +1,25 @@
+{
+  "name": "pyjsx",
+  "displayName": "PyJSX",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "pyjsx",
+      "aliases": ["Python with JSX", "pyjsx"],
+      "extensions": [".px",".pyjsx"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "pyjsx",
+      "scopeName": "source.pyjsx",
+      "path": "./syntaxes/pyjsx.tmLanguage.json"
+    }]
+  }
+}
