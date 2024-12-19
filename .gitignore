@@ -9,3 +9,5 @@ dist/
 
 venv
 .python-version
+
+.vscode

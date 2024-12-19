@@ -1,5 +1,16 @@
 # pyjsx README
 
+## Work in progress LSP/Syntax highlighting support
+
+### Resources:
+
+- https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide
+- https://code.visualstudio.com/api/language-extensions/embedded-languages
+
+- https://github.com/microsoft/vscode/tree/main/extensions/javascript
+- https://github.com/microsoft/vscode/tree/main/extensions/python
+
+
 This is the README for your extension "pyjsx". After writing up a brief description, we recommend including the following sections.
 
 ## Features
