@@ -10,16 +10,41 @@
     "Programming Languages"
   ],
   "contributes": {
-    "languages": [{
-      "id": "pyjsx",
-      "aliases": ["Python with JSX", "pyjsx"],
-      "extensions": [".px",".pyjsx"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "pyjsx",
-      "scopeName": "source.pyjsx",
-      "path": "./syntaxes/pyjsx.tmLanguage.json"
-    }]
+    "languages": [
+      {
+        "id": "pyjsx",
+        "aliases": [
+          "Python with JSX",
+          "pyjsx"
+        ],
+        "extensions": [
+          ".px",
+          ".pyjsx"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "python-jsx-tags",
+        "aliases": [],
+        "configuration": "./tags-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pyjsx",
+        "scopeName": "source.pyjsx",
+        "path": "./syntaxes/pyjsx.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.tag.js": "python-jsx-tags",
+          "meta.tag.without-attributes.js": "python-jsx-tags",
+          "meta.tag.attributes.js.jsx": "pyjsx",
+          "meta.embedded.expression.js": "pyjsx"
+        }
+      },
+      {
+        "scopeName": "source.regexp.pyjsx",
+        "path": "./syntaxes/MagicRegExp.tmLanguage.json"
+      }
+    ]
   }
 }
