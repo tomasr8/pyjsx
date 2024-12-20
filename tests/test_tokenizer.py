@@ -11,7 +11,7 @@ def ruff_format(source):
     p = Popen(["ruff", "format", "-"], shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE)  # noqa: S603, S607
     output, err = p.communicate(source.encode("utf-8"))
     assert not err
-    return output
+    return output.decode("utf-8").replace("\r\n", "\n")
 
 
 @pytest.mark.parametrize(

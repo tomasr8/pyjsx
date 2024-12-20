@@ -1,9 +1,16 @@
 import re
 from collections.abc import Generator
 from dataclasses import dataclass
-from enum import StrEnum
 
 from pyjsx.util import get_line_number_offset, highlight_line
+
+
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 
 
 ELEMENT_NAME = re.compile(r"^[_a-zA-Z]\w*(?:\.[_a-zA-Z]\w*)*")

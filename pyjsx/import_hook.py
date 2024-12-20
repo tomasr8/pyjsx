@@ -29,7 +29,7 @@ class PyJSXLoader(FileLoader):
         self.path = f"{name}.px"
 
     def _compile(self) -> str:
-        return transpile(Path(self.path).read_text())
+        return transpile(Path(self.path).read_text("utf-8"))
 
     def exec_module(self, module: ModuleType) -> None:
         code = self._compile()
@@ -46,12 +46,12 @@ class PyJSXFinder(MetaPathFinder):
         path: Sequence[str] | None,
         target: ModuleType | None = None,  # noqa: ARG002
     ) -> ModuleSpec | None:
-        if path:
-            msg = "Only top-level imports are not supported"
-            raise NotImplementedError(msg)
         filename = f"{fullname}.px"
         if not Path(filename).exists():
             return None
+        if path:
+            msg = "Only top-level imports are supported"
+            raise NotImplementedError(msg)
         return importlib.util.spec_from_loader(fullname, PyJSXLoader(fullname))
 
 

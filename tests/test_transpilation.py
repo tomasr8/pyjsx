@@ -234,5 +234,5 @@ def _get_stdlib_python_modules():
 
 @pytest.mark.parametrize("module_path", _get_stdlib_python_modules())
 def test_roundtrip(module_path):
-    source = module_path.read_text()
+    source = module_path.read_text("utf-8")
     assert transpile(source) == source

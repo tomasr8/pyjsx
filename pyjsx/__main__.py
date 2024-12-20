@@ -6,7 +6,7 @@ from pyjsx import transpile
 
 def transpile_file(f: Path) -> None:
     print("Transpiling", f)  # noqa: T201
-    source = f.read_text()
+    source = f.read_text("utf-8")
     new_file = f.parent / f"{f.stem}_transpiled{f.suffix}"
     new_file.write_text(transpile(source))
 
