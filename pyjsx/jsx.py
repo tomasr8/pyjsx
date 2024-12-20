@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Protocol
+import sys
+from typing import Any, Protocol, TypeAlias
 
 from pyjsx.elements import is_void_element
 from pyjsx.util import flatten, indent
@@ -101,4 +102,4 @@ class _JSX:
 
 
 jsx = _JSX()
-type JSX = JSXElement | str
+JSX: TypeAlias = JSXElement | str
