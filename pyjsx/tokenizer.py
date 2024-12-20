@@ -6,13 +6,13 @@ from dataclasses import dataclass
 from pyjsx.util import get_line_number_offset, highlight_line
 
 
-if sys.version_info == (3, 10):
+if sys.version_info[:2] == (3, 10):
     from enum import Enum
 
     class StrEnum(str, Enum):
         pass
 else:
-    from enum import StrEnum
+    from enum import StrEnum  # pyright: ignore[reportAssignmentType]
 
 
 ELEMENT_NAME = re.compile(r"^[_a-zA-Z]\w*(?:\.[_a-zA-Z]\w*)*")
