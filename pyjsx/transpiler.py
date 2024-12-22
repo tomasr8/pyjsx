@@ -6,7 +6,7 @@ from io import StringIO
 from typing import Any, TypeAlias
 
 from pyjsx.elements import is_builtin_element
-from pyjsx.source_maps import get_end_offset, offset_by, extend_last
+from pyjsx.source_maps.source_maps import get_end_offset, offset_by, extend_last
 from pyjsx.tokenizer import Token, Tokenizer, TokenType
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from pyjsx.source_maps import get_end_offset, is_continuous
+from pyjsx.source_maps.source_maps import get_end_offset, is_continuous
 from pyjsx.tokenizer import Token, TokenType
 from pyjsx.transpiler import (
     JSXElement,
