@@ -3,44 +3,145 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from io import StringIO
-from typing import Any
+from typing import Any, TypeAlias
 
 from pyjsx.elements import is_builtin_element
+from pyjsx.source_maps import get_end_offset, offset_by, extend_last
 from pyjsx.tokenizer import Token, Tokenizer, TokenType
 
 
 UNESCAPED_QUOTES = re.compile(r'(?<!\\)"')
+SourceMap: TypeAlias = dict[int, tuple[int, int, int]]
 
 
 class ParseError(Exception):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
+class JSXAttributeLiteral:
+    value: str
+    token: Token
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        source_map = {0: (len(self.value), self.token.start, self.token.end)}
+        return self.value, source_map
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass(frozen=True)
 class JSXNamedAttribute:
     name: str
-    value: str | JSXExpression | JSXElement | JSXFragment
+    value: JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment
+    name_token: Token
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        transpiled = f'"{self.name}": '
+        source_map = {0: (len(self.name) + 4, self.name_token.start, self.name_token.end)}
+        transpiled_value, source_map_value = self.value.transpile()
+        transpiled += transpiled_value
+        source_map |= offset_by(source_map_value, get_end_offset(source_map))
+        return transpiled, source_map
 
 
-@dataclass
+@dataclass(frozen=True)
 class JSXSpreadAttribute:
     value: JSXExpression
 
+    def transpile(self) -> tuple[str, SourceMap]:
+        return self.value.transpile()  # TODO
 
-@dataclass
+
+@dataclass(frozen=True)
 class JSXFragment:
     children: list
+    open_token: Token
+    close_token: Token
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        transpiled = "jsx(jsx.Fragment, {}, ["
+        source_map = {0: (23, self.open_token.start, self.open_token.end)}
+        for i, child in enumerate(self.children):
+            transpiled_child, souce_map_child = child.transpile()
+            transpiled += transpiled_child
+            if i < len(self.children) - 1:
+                transpiled += ", "
+                # end = get_end_offset(source_map)
+                # source_map |= {end: (end+2, self.open_token.start, self.open_token.end)}
+                source_map = extend_last(source_map, 2)
+            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+        offset = get_end_offset(source_map)
+        source_map[offset] = (offset + 2, self.close_token.start, self.close_token.end)
+        transpiled += "])"
+        return transpiled, source_map
 
     def __str__(self):
         children = ", ".join(str(child) for child in self.children)
         return f"jsx(jsx.Fragment, {{}}, [{children}])"
 
 
-@dataclass
+@dataclass(frozen=True)
 class JSXElement:
     name: str
     attributes: list[JSXNamedAttribute | JSXSpreadAttribute]
     children: list
+    open_token: Token
+    close_token: Token
+    name_token: Token
+    open_token2: Token | None = None
+    close_token2: Token | None = None
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        transpiled = "jsx("
+        source_map = {0: (4, self.open_token.start, self.open_token.end)}
+        transpiled_name, source_map_name = self.transpile_name()
+        transpiled += transpiled_name
+        source_map |= offset_by(source_map_name, get_end_offset(source_map))
+        transpiled += ", "
+        source_map = extend_last(source_map, 2)
+        transpiled_attributes, source_map_attributes = self.transpile_attributes()
+        transpiled += transpiled_attributes
+        source_map |= offset_by(source_map_attributes, get_end_offset(source_map))
+        transpiled += ", ["
+        source_map = extend_last(source_map, 3)
+
+        for i, child in enumerate(self.children):
+            transpiled_child, souce_map_child = child.transpile()
+            transpiled += transpiled_child
+            if i < len(self.children) - 1:
+                transpiled += ", "
+                source_map = extend_last(source_map, 2)
+            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+
+        transpiled += "])"
+        offset = get_end_offset(source_map)
+        source_map[offset] = (offset + 2, self.close_token.start, self.close_token.end)
+        return transpiled, source_map
+
+    def transpile_name(self) -> tuple[str, SourceMap]:
+        if is_builtin_element(self.name):
+            return f'"{self.name}"', {0: (len(self.name) + 2, self.name_token.start, self.name_token.end)}
+        return self.name, {0: (len(self.name), self.name_token.start, self.name_token.end)}
+
+    def transpile_attributes(self) -> tuple[str, SourceMap]:
+        if not self.attributes:
+            return "{}", {}
+        transpiled = "{"
+        source_map = {0: (1, self.attributes[0].name_token.start, self.attributes[0].name_token.end)}
+
+        for i, attr in enumerate(self.attributes):
+            transpiled_attr, source_map_attr = attr.transpile()
+            transpiled += transpiled_attr
+            if i < len(self.attributes) - 1:
+                transpiled += ", "
+                source_map = extend_last(source_map, 2)
+            source_map |= offset_by(source_map_attr, get_end_offset(source_map))
+
+        transpiled += "}"
+        source_map = extend_last(source_map, 1)
+        return transpiled, source_map
 
     def __str__(self):
         condensed = []
@@ -61,33 +162,82 @@ class JSXElement:
             condensed.append(curr)
 
         condensed = condensed or [{}]
-        attributes = " | ".join(sringify_attribute_dict(attrs) for attrs in condensed)
+        attributes = " | ".join(self.sringify_attribute_dict(attrs) for attrs in condensed)
         children = ", ".join(str(child) for child in self.children)
         tag = f'"{self.name}"' if is_builtin_element(self.name) else self.name
         return f"jsx({tag}, {attributes}, [{children}])"
 
+    def sringify_attribute_dict(self, attrs: dict[str, Any]) -> str:
+        if isinstance(attrs, JSXExpression | JSXElement | JSXFragment):
+            return f"({attrs})"
+        if not attrs:
+            return "{}"
+        kvs = ", ".join(f"'{k}': {v}" for k, v in attrs.items())
+        return f"{{{kvs}}}"
 
-def sringify_attribute_dict(attrs: dict[str, Any]) -> str:
-    if isinstance(attrs, JSXExpression | JSXElement | JSXFragment):
-        return f"({attrs})"
-    if not attrs:
-        return "{}"
-    kvs = ", ".join(f"'{k}': {v}" for k, v in attrs.items())
-    return f"{{{kvs}}}"
 
-
-@dataclass
+@dataclass(frozen=True)
 class JSXText:
     value: str
+    token: Token
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        transpiled = str(self)
+        source_map = {0: (len(transpiled), self.token.start, self.token.end)}
+        return transpiled, source_map
 
     def __str__(self):
         value = re.sub(UNESCAPED_QUOTES, '\\"', self.value)
         return f'"{value}"'
 
 
-@dataclass
+@dataclass(frozen=True)
 class JSXExpression:
     children: list
+    open_token: Token
+    close_token: Token
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        transpiled = ""
+        source_map = {}
+        for child in self.children:
+            transpiled_child, souce_map_child = child.transpile()
+            transpiled += transpiled_child
+            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+
+        return transpiled, source_map
+
+    def __str__(self):
+        return "".join(str(child) for child in self.children)
+
+
+@dataclass(frozen=True)
+class PythonData:
+    value: str
+    start_token: Token
+    end_token: Token
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        source_map = {0: (len(self.value), self.start_token.start, self.end_token.end)}
+        return str(self), source_map
+
+    def __str__(self):
+        return self.value
+
+
+@dataclass(frozen=True)
+class PyJSXProgram:
+    children: list[PythonData | JSXElement | JSXFragment]
+
+    def transpile(self) -> tuple[str, SourceMap]:
+        transpiled = ""
+        source_map = {}
+        for child in self.children:
+            transpiled_child, souce_map_child = child.transpile()
+            transpiled += transpiled_child
+            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+
+        return transpiled, source_map
 
     def __str__(self):
         return "".join(str(child) for child in self.children)
@@ -147,35 +297,36 @@ def parse_jsx(queue: TokenQueue) -> JSXElement | JSXFragment:
 
 
 def parse_jsx_element(queue: TokenQueue) -> JSXElement:
-    queue.pop_type(TokenType.JSX_OPEN)
-    name = queue.pop_type(TokenType.ELEMENT_NAME).value
+    open_token = queue.pop_type(TokenType.JSX_OPEN)
+    name_token = queue.pop_type(TokenType.ELEMENT_NAME)
+    name = name_token.value
     attributes = []
     if not queue.peek_type(TokenType.JSX_CLOSE) and not queue.peek_type(TokenType.JSX_SLASH_CLOSE):
         attributes = parse_jsx_attributes(queue)
     if queue.peek_type(TokenType.JSX_SLASH_CLOSE):
-        queue.pop()
-        return JSXElement(name, attributes, [])
+        close_token = queue.pop()
+        return JSXElement(name, attributes, [], open_token=open_token, close_token=close_token, name_token=name_token)
 
-    queue.pop_type(TokenType.JSX_CLOSE)
+    close_token = queue.pop_type(TokenType.JSX_CLOSE)
     children = []
     if not queue.peek_type(TokenType.JSX_SLASH_OPEN):
         children = parse_jsx_children(queue)
-    queue.pop_type(TokenType.JSX_SLASH_OPEN)
+    open_token2 = queue.pop_type(TokenType.JSX_SLASH_OPEN)
     closing_tag = queue.pop_type(TokenType.ELEMENT_NAME).value
     if closing_tag != name:
         msg = f"Expected closing tag {name}, got {closing_tag}"
         raise ParseError(msg)
-    queue.pop_type(TokenType.JSX_CLOSE)
-    return JSXElement(name, attributes, children)
+    close_token2 = queue.pop_type(TokenType.JSX_CLOSE)
+    return JSXElement(name, attributes, children, open_token, close_token, name_token, open_token2, close_token2)
 
 
 def parse_jsx_fragment(queue: TokenQueue) -> JSXFragment:
-    queue.pop_type(TokenType.JSX_FRAGMENT_OPEN)
+    open = queue.pop_type(TokenType.JSX_FRAGMENT_OPEN)
     children = []
     if not queue.peek_type(TokenType.JSX_FRAGMENT_CLOSE):
         children = parse_jsx_children(queue)
-    queue.pop_type(TokenType.JSX_FRAGMENT_CLOSE)
-    return JSXFragment(children)
+    close = queue.pop_type(TokenType.JSX_FRAGMENT_CLOSE)
+    return JSXFragment(children, open_token=open, close_token=close)
 
 
 def parse_jsx_children(queue: TokenQueue) -> list:
@@ -195,17 +346,17 @@ def parse_jsx_children(queue: TokenQueue) -> list:
 
 
 def parse_jsx_text(queue: TokenQueue) -> JSXText | None:
-    value = queue.pop_type(TokenType.JSX_TEXT).value
-    lines = value.split("\n")
+    tok = queue.pop_type(TokenType.JSX_TEXT)
+    lines = tok.value.split("\n")
     lines = [line.strip() for line in lines]
     lines = [line for line in lines if line]
     if not lines:
         return None
     value = " ".join(lines)
-    return JSXText(value)
+    return JSXText(value, token=tok)
 
 
-def parse_jsx_attributes(queue: TokenQueue) -> list:
+def parse_jsx_attributes(queue: TokenQueue) -> list[JSXNamedAttribute | JSXSpreadAttribute]:
     attributes = []
     while not queue.peek_type(TokenType.JSX_CLOSE) and not queue.peek_type(TokenType.JSX_SLASH_CLOSE):
         if queue.peek_type(TokenType.ATTRIBUTE):
@@ -219,22 +370,24 @@ def parse_jsx_attributes(queue: TokenQueue) -> list:
 
 
 def parse_named_attribute(queue: TokenQueue) -> JSXNamedAttribute:
-    name = queue.pop_type(TokenType.ATTRIBUTE).value
+    name_token = queue.pop_type(TokenType.ATTRIBUTE)
+    name = name_token.value
     if queue.peek_type(TokenType.OP, value="="):
         queue.pop()
         value = parse_jsx_attribute_value(queue)
     else:
-        value = "True"
-    return JSXNamedAttribute(name, value)
+        value = JSXAttributeLiteral(value="True", token=name_token)
+    return JSXNamedAttribute(name, value, name_token=name_token)
 
 
 def parse_jsx_spread_attribute(queue: TokenQueue) -> JSXSpreadAttribute:
     return JSXSpreadAttribute(parse_python_expression(queue, pop_spread=True))
 
 
-def parse_jsx_attribute_value(queue: TokenQueue) -> str | JSXExpression | JSXElement | JSXFragment:
+def parse_jsx_attribute_value(queue: TokenQueue) -> JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment:
     if queue.peek_type(TokenType.ATTRIBUTE_VALUE):
-        return queue.pop().value
+        token = queue.pop()
+        return JSXAttributeLiteral(token.value, token)
     if queue.peek_type(TokenType.JSX_OPEN_BRACE):
         return parse_python_expression(queue)
     if queue.peek_type(TokenType.JSX_OPEN):
@@ -246,7 +399,7 @@ def parse_jsx_attribute_value(queue: TokenQueue) -> str | JSXExpression | JSXEle
 
 
 def parse_python_expression(queue: TokenQueue, *, pop_spread: bool = False) -> JSXExpression:
-    queue.pop_type(TokenType.JSX_OPEN_BRACE)
+    open = queue.pop_type(TokenType.JSX_OPEN_BRACE)
     if pop_spread:
         queue.pop_type(TokenType.JSX_SPREAD)
     children = []
@@ -255,31 +408,78 @@ def parse_python_expression(queue: TokenQueue, *, pop_spread: bool = False) -> J
             children.append(parse_jsx(queue))
         else:
             children.append(queue.pop().value)
-    queue.pop_type(TokenType.JSX_CLOSE_BRACE)
-    return JSXExpression(children)
+    close = queue.pop_type(TokenType.JSX_CLOSE_BRACE)
+    return JSXExpression(children, open_token=open, close_token=close)
 
 
-class Transpiler:
+def _parse(source: str, fn):
+    tokenizer = Tokenizer(source)
+    tokens = list(tokenizer.tokenize())
+    queue = TokenQueue(tokens)
+    return fn(queue)
+
+
+class Parser:
     def __init__(self, source: str):
         self.source = source
         self.tokenizer = Tokenizer(source)
-        self.output = StringIO()
         self.curr = 0
 
-    def transpile(self) -> str:
+    def parse(self) -> PyJSXProgram:
+        children = []
+        python_tokens = []
         tokens = list(self.tokenizer.tokenize())
-        while self.curr < len(tokens):
-            if tokens[self.curr].type not in {TokenType.JSX_OPEN, TokenType.JSX_FRAGMENT_OPEN}:
-                self.output.write(tokens[self.curr].value)
+        tok_len = len(tokens)
+        while self.curr < tok_len:
+            token = tokens[self.curr]
+            if token.type not in {TokenType.JSX_OPEN, TokenType.JSX_FRAGMENT_OPEN}:
+                python_tokens.append(token)
                 self.curr += 1
             else:
+                if python_tokens:
+                    children.append(
+                        PythonData(
+                            "".join(token.value for token in python_tokens),
+                            python_tokens[0],
+                            python_tokens[-1],
+                        )
+                    )
+                    python_tokens = []
                 queue = TokenQueue(tokens, self.curr, raw=self.source)
                 jsx = parse_jsx(queue)
+                children.append(jsx)
                 self.curr = queue.curr
-                self.output.write(str(jsx))
+        if python_tokens:
+            children.append(
+                PythonData(
+                    "".join(token.value for token in python_tokens),
+                    python_tokens[0],
+                    python_tokens[-1],
+                )
+            )
+            python_tokens = []
+        return PyJSXProgram(children)
+
+
+class Transpiler:
+    def __init__(self, ast: PyJSXProgram):
+        self.ast = ast
+        self.output = StringIO()
+        self.curr_map = None
+        self.source_map = {}
+
+    def transpile(self) -> str:
+        start_offset = 0
+        for ch in self.ast.children:
+            # sm = ch.source_map(start_offset)
+            # self.source_map |= sm
+            # start_offset = get_end_offset(sm)
+            self.output.write(str(ch))
+
         return self.output.getvalue()
 
 
 def transpile(source: str) -> str:
-    transpiler = Transpiler(source)
+    ast = Parser(source).parse()
+    transpiler = Transpiler(ast)
     return transpiler.transpile()

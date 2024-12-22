@@ -1,6 +1,7 @@
 import contextlib
 import itertools
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -183,9 +184,7 @@ def App():
 )
 def test_multiline(snapshot, request, source):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
-    snapshot.assert_match(
-        transpile(source), f"transpiler-multiline-{request.node.callspec.id}.txt"
-    )
+    snapshot.assert_match(transpile(source), f"transpiler-multiline-{request.node.callspec.id}.txt")
 
 
 @pytest.mark.parametrize(
@@ -219,7 +218,8 @@ def _get_stdlib_python_modules():
             continue
 
         module = None
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(Exception), warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
             module = __import__(name)
 
         if (file_ := getattr(module, "__file__", None)) is None:
