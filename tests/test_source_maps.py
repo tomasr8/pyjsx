@@ -1,6 +1,14 @@
+import json
+
 import pytest
 
-from pyjsx.source_maps.source_maps import get_end_offset, is_continuous
+from pyjsx.source_maps.source_maps import (
+    convert_mappings,
+    convert_offset_to_line_col,
+    generate_source_map,
+    get_end_offset,
+    is_continuous,
+)
 from pyjsx.tokenizer import Token, TokenType
 from pyjsx.transpiler import (
     JSXElement,
@@ -102,3 +110,35 @@ def test_jsx_element(source, expected):
     # assert len(transpiled) == get_end_offset(source_map)
     assert is_continuous(source_map)
     assert source_map == expected
+
+
+@pytest.mark.parametrize(
+    ("offsets", "source", "expected"),
+    [
+        ([], "", []),
+        ([0], "foo", [(1, 0)]),
+        ([0, 1, 2], "foo", [(1, 0), (1, 1), (1, 2)]),
+        ([0, 1, 2], "foobar", [(1, 0), (1, 1), (1, 2)]),
+        ([0, 100], "foo", [(1, 0)]),
+        ([100], "foo", []),
+        ([0, 4], "foo\nbar", [(1, 0), (2, 0)]),
+        ([3, 5], "foo\nbar", [(1, 3), (2, 1)]),
+    ],
+)
+def test_convert_offset_to_line_col(offsets, source, expected):
+    assert convert_offset_to_line_col(offsets, source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "vlq"),
+    [
+        ("", ""),
+    ],
+)
+def test_source_maps(source, vlq):
+    ast = Parser(source).parse()
+    transpiled, source_map = ast.transpile()
+    source_map = convert_mappings(source_map, source, transpiled, name="main.px")
+    generated = generate_source_map(source_map, sources=["main.px"], sources_content=[source], file="main.px")
+    generated = json.loads(generated)
+    assert generated["mappings"] == vlq

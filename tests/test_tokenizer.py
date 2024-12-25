@@ -4,7 +4,7 @@ from subprocess import PIPE, Popen
 
 import pytest
 
-from pyjsx.tokenizer import Tokenizer, TokenizerError
+from pyjsx.tokenizer import Token, Tokenizer, TokenizerError
 
 
 def ruff_format(source):
@@ -12,6 +12,11 @@ def ruff_format(source):
     output, err = p.communicate(source.encode("utf-8"))
     assert not err
     return output.decode("utf-8").replace("\r\n", "\n")
+
+
+def assert_sequential_offsets(tokens: list[Token]):
+    for prev, curr in itertools.pairwise(tokens):
+        assert prev.end <= curr.start
 
 
 @pytest.mark.parametrize(
@@ -29,6 +34,7 @@ def test_simple(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-simple-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(
@@ -44,6 +50,7 @@ def test_element_names(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-element-names-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(
@@ -63,6 +70,7 @@ def test_attributes_names(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-element-attributes-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(
@@ -82,6 +90,7 @@ def test_nesting(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-nesting-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(
@@ -99,6 +108,7 @@ def test_mixed(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-mixed-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(
@@ -146,6 +156,7 @@ def test_multiline_strings(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-strings-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(
@@ -170,6 +181,7 @@ def test_fstrings(request, snapshot, source):
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
     snapshot.assert_match(ruff_format(repr(tokens)), f"tokenizer-fstrings-{request.node.callspec.id}.txt")
+    assert_sequential_offsets(tokens)
 
 
 @pytest.mark.parametrize(

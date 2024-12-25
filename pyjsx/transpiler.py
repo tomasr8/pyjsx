@@ -6,7 +6,7 @@ from io import StringIO
 from typing import Any, TypeAlias
 
 from pyjsx.elements import is_builtin_element
-from pyjsx.source_maps.source_maps import get_end_offset, offset_by, extend_last
+from pyjsx.source_maps.source_maps import OffsetMapping, concat, extend_last, offset_by, prepend_first
 from pyjsx.tokenizer import Token, Tokenizer, TokenType
 
 
@@ -23,9 +23,8 @@ class JSXAttributeLiteral:
     value: str
     token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
-        source_map = {0: (len(self.value), self.token.start, self.token.end)}
-        return self.value, source_map
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
+        return self.value, [OffsetMapping(0, len(self.value), self.token.start)]
 
     def __str__(self):
         return self.value
@@ -37,43 +36,64 @@ class JSXNamedAttribute:
     value: JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment
     name_token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = f'"{self.name}": '
-        source_map = {0: (len(self.name) + 4, self.name_token.start, self.name_token.end)}
+        source_map = [OffsetMapping(0, len(self.name) + 4, self.name_token.start)]
         transpiled_value, source_map_value = self.value.transpile()
         transpiled += transpiled_value
-        source_map |= offset_by(source_map_value, get_end_offset(source_map))
+        source_map = concat(source_map, source_map_value)
         return transpiled, source_map
 
 
 @dataclass(frozen=True)
 class JSXSpreadAttribute:
     value: JSXExpression
+    spread_token: Token
+    # start_token: Token
+    # end_token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
-        return self.value.transpile()  # TODO
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
+        # source_map = [Off]
+        # source_map = [OffsetMapping(0, 2, self.spread_token.start)]
+        transpiled_attr, source_map_attr = self.value.transpile()
+        # print("SOURCE MAP ATTR", source_map_attr)
+        transpiled = f"**{transpiled_attr}"
+        # source_map = concat(source_map, source_map_attr)
+        # source_map = prepend_first(source_map_attr, 2)
+        first = source_map_attr[0]
+        if len(source_map_attr) == 1:
+            source_map = [
+                OffsetMapping(first.generated_start_offset, first.generated_end_offset + 2, first.original_offset),
+            ]
+        else:
+            source_map = [
+                OffsetMapping(first.generated_start_offset, first.generated_end_offset + 2, first.original_offset),
+                *(
+                    OffsetMapping(m.generated_start_offset + 2, m.generated_end_offset + 2, m.original_offset)
+                    for m in source_map_attr
+                ),
+            ]
+        return transpiled, source_map
 
 
 @dataclass(frozen=True)
 class JSXFragment:
-    children: list
+    children: list[JSXElement | JSXFragment | JSXText | JSXExpression]
     open_token: Token
     close_token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = "jsx(jsx.Fragment, {}, ["
-        source_map = {0: (23, self.open_token.start, self.open_token.end)}
+        source_map = [OffsetMapping(0, 23, self.open_token.start)]
         for i, child in enumerate(self.children):
-            transpiled_child, souce_map_child = child.transpile()
+            transpiled_child, source_map_child = child.transpile()
             transpiled += transpiled_child
             if i < len(self.children) - 1:
                 transpiled += ", "
-                # end = get_end_offset(source_map)
-                # source_map |= {end: (end+2, self.open_token.start, self.open_token.end)}
                 source_map = extend_last(source_map, 2)
-            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
-        offset = get_end_offset(source_map)
-        source_map[offset] = (offset + 2, self.close_token.start, self.close_token.end)
+            source_map = concat(source_map, source_map_child)
+        last = source_map[-1].generated_end_offset
+        source_map.append(OffsetMapping(last, last + 2, self.close_token.start))
         transpiled += "])"
         return transpiled, source_map
 
@@ -86,61 +106,93 @@ class JSXFragment:
 class JSXElement:
     name: str
     attributes: list[JSXNamedAttribute | JSXSpreadAttribute]
-    children: list
+    children: list[JSXElement | JSXFragment | JSXText | JSXExpression]
     open_token: Token
     close_token: Token
     name_token: Token
     open_token2: Token | None = None
     close_token2: Token | None = None
 
-    def transpile(self) -> tuple[str, SourceMap]:
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = "jsx("
-        source_map = {0: (4, self.open_token.start, self.open_token.end)}
+        source_map = [OffsetMapping(0, 4, self.open_token.start)]
         transpiled_name, source_map_name = self.transpile_name()
+        # print("name source map", source_map_name)
         transpiled += transpiled_name
-        source_map |= offset_by(source_map_name, get_end_offset(source_map))
+        source_map = concat(source_map, source_map_name)
+        # print("name source map c", source_map)
         transpiled += ", "
         source_map = extend_last(source_map, 2)
-        transpiled_attributes, source_map_attributes = self.transpile_attributes()
-        transpiled += transpiled_attributes
-        source_map |= offset_by(source_map_attributes, get_end_offset(source_map))
-        transpiled += ", ["
-        source_map = extend_last(source_map, 3)
+        transpiled += "{"
+        source_map = extend_last(source_map, 1)
+        # if not self.attributes:
+        # transpiled += "{}"
+        # source_map = extend_last(source_map, 2)
+        if self.attributes:
+            # transpiled += "{"
+            # source_map = extend_last(source_map, 1)
+            transpiled_attributes, source_map_attributes = self.transpile_attributes()
+            # source_map_attributes = offset_by(source_map_attributes, 1)
+            # print("SM attr", source_map_attributes)
+            transpiled += transpiled_attributes
+            source_map = concat(source_map, source_map_attributes)
+        # print("SM1", source_map)
+        # transpiled += "}"
+        # source_map |= offset_by(source_map_attributes, get_end_offset(source_map))
+        transpiled += "}, ["
+        source_map = concat(source_map, [OffsetMapping(0, 4, self.close_token.start)])
+        # source_map = extend_last(source_map, 3)
 
         for i, child in enumerate(self.children):
-            transpiled_child, souce_map_child = child.transpile()
+            transpiled_child, source_map_child = child.transpile()
             transpiled += transpiled_child
             if i < len(self.children) - 1:
                 transpiled += ", "
-                source_map = extend_last(source_map, 2)
-            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+                source_map_child = extend_last(source_map_child, 2)
+            source_map = concat(source_map, source_map_child)
+            # source_map |= offset_by(souce_map_child, get_end_offset(source_map))
 
         transpiled += "])"
-        offset = get_end_offset(source_map)
-        source_map[offset] = (offset + 2, self.close_token.start, self.close_token.end)
+        offset = source_map[-1].generated_end_offset
+        # source_map[offset] = (offset + 2, self.close_token.start, self.close_token.end)
+        source_map.append(OffsetMapping(offset, offset + 2, self.open_token2.start))
         return transpiled, source_map
 
-    def transpile_name(self) -> tuple[str, SourceMap]:
+    def transpile_name(self) -> tuple[str, list[OffsetMapping]]:
         if is_builtin_element(self.name):
-            return f'"{self.name}"', {0: (len(self.name) + 2, self.name_token.start, self.name_token.end)}
-        return self.name, {0: (len(self.name), self.name_token.start, self.name_token.end)}
+            # return f'"{self.name}"', {0: (len(self.name) + 2, self.name_token.start, self.name_token.end)}
+            return f'"{self.name}"', [OffsetMapping(0, len(self.name) + 2, self.name_token.start)]
 
-    def transpile_attributes(self) -> tuple[str, SourceMap]:
-        if not self.attributes:
-            return "{}", {}
-        transpiled = "{"
-        source_map = {0: (1, self.attributes[0].name_token.start, self.attributes[0].name_token.end)}
+        # return self.name, {0: (len(self.name), self.name_token.start, self.name_token.end)}
+        return self.name, [(OffsetMapping(0, len(self.name), self.name_token.start))]
+
+    def transpile_attributes(self) -> tuple[str, list[OffsetMapping]]:
+        transpiled = ""
+        # source_map = {0: (1, self.attributes[0].name_token.start, self.attributes[0].name_token.end)}
+        # source_map = [OffsetMapping(0, 1, self.attributes[0].name_token.start)]
+        source_map = []  # TODO
+        # source_map = [OffsetMapping(0, 1, self.attributes[0].name_token.start)]
 
         for i, attr in enumerate(self.attributes):
             transpiled_attr, source_map_attr = attr.transpile()
+            # print("SMAPATTR", source_map_attr)
             transpiled += transpiled_attr
             if i < len(self.attributes) - 1:
                 transpiled += ", "
-                source_map = extend_last(source_map, 2)
-            source_map |= offset_by(source_map_attr, get_end_offset(source_map))
+                source_map_attr = extend_last(source_map_attr, 2)
+            # source_map |= offset_by(source_map_attr, get_end_offset(source_map))
+            source_map = concat(source_map, source_map_attr)
+        # first = source_map[0]
+        # source_map[0] = OffsetMapping(
+        #     first.generated_start_offset - 1, first.generated_end_offset, first.original_offset
+        # )
 
-        transpiled += "}"
-        source_map = extend_last(source_map, 1)
+        # transpiled += "}"
+        # source_map = extend_last(source_map, 1)
+        # print("ATTR")
+        # for m in source_map:
+        # print(m)
+        # print()
         return transpiled, source_map
 
     def __str__(self):
@@ -181,10 +233,9 @@ class JSXText:
     value: str
     token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = str(self)
-        source_map = {0: (len(transpiled), self.token.start, self.token.end)}
-        return transpiled, source_map
+        return transpiled, [OffsetMapping(0, len(transpiled), self.token.start)]
 
     def __str__(self):
         value = re.sub(UNESCAPED_QUOTES, '\\"', self.value)
@@ -197,13 +248,16 @@ class JSXExpression:
     open_token: Token
     close_token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = ""
-        source_map = {}
+        source_map = []
         for child in self.children:
             transpiled_child, souce_map_child = child.transpile()
             transpiled += transpiled_child
-            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+            source_map = concat(source_map, souce_map_child)
+
+        first = source_map[0]
+        source_map[0] = OffsetMapping(first.generated_start_offset, first.generated_end_offset, self.open_token.start)
 
         return transpiled, source_map
 
@@ -217,9 +271,12 @@ class PythonData:
     start_token: Token
     end_token: Token
 
-    def transpile(self) -> tuple[str, SourceMap]:
-        source_map = {0: (len(self.value), self.start_token.start, self.end_token.end)}
-        return str(self), source_map
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
+        return str(self), [
+            OffsetMapping(
+                generated_start_offset=0, generated_end_offset=len(self.value), original_offset=self.start_token.start
+            )
+        ]
 
     def __str__(self):
         return self.value
@@ -229,13 +286,13 @@ class PythonData:
 class PyJSXProgram:
     children: list[PythonData | JSXElement | JSXFragment]
 
-    def transpile(self) -> tuple[str, SourceMap]:
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = ""
-        source_map = {}
+        source_map = []
         for child in self.children:
-            transpiled_child, souce_map_child = child.transpile()
+            transpiled_child, source_map_child = child.transpile()
             transpiled += transpiled_child
-            source_map |= offset_by(souce_map_child, get_end_offset(source_map))
+            source_map = concat(source_map, source_map_child)
 
         return transpiled, source_map
 
@@ -329,7 +386,7 @@ def parse_jsx_fragment(queue: TokenQueue) -> JSXFragment:
     return JSXFragment(children, open_token=open, close_token=close)
 
 
-def parse_jsx_children(queue: TokenQueue) -> list:
+def parse_jsx_children(queue: TokenQueue) -> list[JSXElement | JSXFragment | JSXText | JSXExpression]:
     children = []
     while not queue.peek_type(TokenType.JSX_SLASH_OPEN) and not queue.peek_type(TokenType.JSX_FRAGMENT_CLOSE):
         if queue.peek_type(TokenType.JSX_OPEN):
@@ -381,7 +438,22 @@ def parse_named_attribute(queue: TokenQueue) -> JSXNamedAttribute:
 
 
 def parse_jsx_spread_attribute(queue: TokenQueue) -> JSXSpreadAttribute:
-    return JSXSpreadAttribute(parse_python_expression(queue, pop_spread=True))
+    # return JSXSpreadAttribute(parse_python_expression(queue, pop_spread=True))
+    open = queue.pop_type(TokenType.JSX_OPEN_BRACE)
+    spread = queue.pop_type(TokenType.JSX_SPREAD)
+    children = []
+    python_data = []
+    while not queue.peek_type(TokenType.JSX_CLOSE_BRACE):
+        if queue.peek_type(TokenType.JSX_OPEN) or queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
+            children.append(PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1]))
+            python_data = []
+            children.append(parse_jsx(queue))
+        else:
+            python_data.append(queue.pop())
+    if python_data:
+        children.append(PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1]))
+    close = queue.pop_type(TokenType.JSX_CLOSE_BRACE)
+    return JSXSpreadAttribute(JSXExpression(children, open_token=open, close_token=close), spread_token=spread)
 
 
 def parse_jsx_attribute_value(queue: TokenQueue) -> JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment:
@@ -403,20 +475,18 @@ def parse_python_expression(queue: TokenQueue, *, pop_spread: bool = False) -> J
     if pop_spread:
         queue.pop_type(TokenType.JSX_SPREAD)
     children = []
+    python_data = []
     while not queue.peek_type(TokenType.JSX_CLOSE_BRACE):
         if queue.peek_type(TokenType.JSX_OPEN) or queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
+            children.append(PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1]))
+            python_data = []
             children.append(parse_jsx(queue))
         else:
-            children.append(queue.pop().value)
+            python_data.append(queue.pop())
+    if python_data:
+        children.append(PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1]))
     close = queue.pop_type(TokenType.JSX_CLOSE_BRACE)
     return JSXExpression(children, open_token=open, close_token=close)
-
-
-def _parse(source: str, fn):
-    tokenizer = Tokenizer(source)
-    tokens = list(tokenizer.tokenize())
-    queue = TokenQueue(tokens)
-    return fn(queue)
 
 
 class Parser:
