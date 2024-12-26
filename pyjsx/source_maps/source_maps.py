@@ -187,6 +187,29 @@ def convert_offset_to_line_col(offsets: list[int], source: str) -> list[tuple[in
     return locations
 
 
+def convert_line_col_to_offset(locations: list[tuple[int, int]], source: str) -> list[int]:
+    source_index = 0
+    locations_index = 0
+    source_length = len(source)
+    locations_length = len(locations)
+    line = 1
+    offset = 0
+    offsets = []
+    while source_index < source_length and locations_index < locations_length:
+        location = locations[locations_index]
+        if line == location[0] and offset == location[1]:
+            offsets.append(source_index)
+            locations_index += 1
+        if source[source_index:].startswith(os.linesep):
+            line += 1
+            offset = 0
+            source_index += len(os.linesep)
+        else:
+            offset += 1
+            source_index += 1
+    return offsets
+
+
 def convert_mappings(mappings: list[OffsetMapping], source: str, transpiled: str, name: str) -> list[Mapping]:
     locations_original = convert_offset_to_line_col([m.original_offset for m in mappings], source)
     locations_generated = convert_offset_to_line_col([m.generated_start_offset for m in mappings], transpiled)

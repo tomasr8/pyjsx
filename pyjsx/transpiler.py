@@ -6,7 +6,7 @@ from io import StringIO
 from typing import Any, TypeAlias
 
 from pyjsx.elements import is_builtin_element
-from pyjsx.source_maps.source_maps import OffsetMapping, concat, extend_last, offset_by, prepend_first
+from pyjsx.source_maps.source_maps import OffsetMapping, concat, extend_last
 from pyjsx.tokenizer import Token, Tokenizer, TokenType
 
 
@@ -18,8 +18,14 @@ class ParseError(Exception):
     pass
 
 
-@dataclass(frozen=True)
-class JSXAttributeLiteral:
+@dataclass
+class Node:
+    def unparse(self) -> str:
+        raise NotImplementedError
+
+
+@dataclass
+class JSXAttributeLiteral(Node):
     value: str
     token: Token
 
@@ -29,9 +35,14 @@ class JSXAttributeLiteral:
     def __str__(self):
         return self.value
 
+    def unparse(self) -> str:
+        # print("VAL", f"<<{self.value}>>")
+        # return self.value.replace('"', r"\"")
+        return self.value
 
-@dataclass(frozen=True)
-class JSXNamedAttribute:
+
+@dataclass
+class JSXNamedAttribute(Node):
     name: str
     value: JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment
     name_token: Token
@@ -44,9 +55,15 @@ class JSXNamedAttribute:
         source_map = concat(source_map, source_map_value)
         return transpiled, source_map
 
+    def unparse(self) -> str:
+        value = self.value.unparse()
+        if value == "True":  # TODO fix this
+            return self.name
+        return f"{self.name}={value}"
 
-@dataclass(frozen=True)
-class JSXSpreadAttribute:
+
+@dataclass
+class JSXSpreadAttribute(Node):
     value: JSXExpression
     spread_token: Token
     # start_token: Token
@@ -75,9 +92,14 @@ class JSXSpreadAttribute:
             ]
         return transpiled, source_map
 
+    def unparse(self) -> str:
+        value = self.value.unparse()
+        value = value.removeprefix("{").removesuffix("}")  # TODO fix this
+        return f"{{...{value}}}"
 
-@dataclass(frozen=True)
-class JSXFragment:
+
+@dataclass
+class JSXFragment(Node):
     children: list[JSXElement | JSXFragment | JSXText | JSXExpression]
     open_token: Token
     close_token: Token
@@ -101,9 +123,13 @@ class JSXFragment:
         children = ", ".join(str(child) for child in self.children)
         return f"jsx(jsx.Fragment, {{}}, [{children}])"
 
+    def unparse(self) -> str:
+        children = "".join(child.unparse() for child in self.children)
+        return f"<>{children}</>"
 
-@dataclass(frozen=True)
-class JSXElement:
+
+@dataclass
+class JSXElement(Node):
     name: str
     attributes: list[JSXNamedAttribute | JSXSpreadAttribute]
     children: list[JSXElement | JSXFragment | JSXText | JSXExpression]
@@ -112,6 +138,10 @@ class JSXElement:
     name_token: Token
     open_token2: Token | None = None
     close_token2: Token | None = None
+
+    @property
+    def self_closing(self) -> bool:
+        return not bool(self.open_token2)
 
     def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = "jsx("
@@ -227,9 +257,25 @@ class JSXElement:
         kvs = ", ".join(f"'{k}': {v}" for k, v in attrs.items())
         return f"{{{kvs}}}"
 
+    def unparse(self) -> str:
+        attributes = " ".join(attr.unparse() for attr in self.attributes)
+        children = "".join(child.unparse() for child in self.children)
+        res = f"<{self.name}"
+        if attributes:
+            res += " "
+            res += attributes
+        if self.self_closing:
+            res += " />"
+        else:
+            res += ">"
+            if children:
+                res += children
+            res += f"</{self.name}>"
+        return res
 
-@dataclass(frozen=True)
-class JSXText:
+
+@dataclass
+class JSXText(Node):
     value: str
     token: Token
 
@@ -241,9 +287,12 @@ class JSXText:
         value = re.sub(UNESCAPED_QUOTES, '\\"', self.value)
         return f'"{value}"'
 
+    def unparse(self) -> str:
+        return self.value
 
-@dataclass(frozen=True)
-class JSXExpression:
+
+@dataclass
+class JSXExpression(Node):
     children: list
     open_token: Token
     close_token: Token
@@ -264,9 +313,13 @@ class JSXExpression:
     def __str__(self):
         return "".join(str(child) for child in self.children)
 
+    def unparse(self) -> str:
+        children = "".join(child.unparse() for child in self.children)
+        return f"{{{children}}}"
 
-@dataclass(frozen=True)
-class PythonData:
+
+@dataclass
+class PythonData(Node):
     value: str
     start_token: Token
     end_token: Token
@@ -281,9 +334,12 @@ class PythonData:
     def __str__(self):
         return self.value
 
+    def unparse(self) -> str:
+        return self.value
 
-@dataclass(frozen=True)
-class PyJSXProgram:
+
+@dataclass
+class PyJSXProgram(Node):
     children: list[PythonData | JSXElement | JSXFragment]
 
     def transpile(self) -> tuple[str, list[OffsetMapping]]:
@@ -298,6 +354,9 @@ class PyJSXProgram:
 
     def __str__(self):
         return "".join(str(child) for child in self.children)
+
+    def unparse(self) -> str:
+        return "".join(child.unparse() for child in self.children)
 
 
 class TokenQueue:
@@ -445,8 +504,11 @@ def parse_jsx_spread_attribute(queue: TokenQueue) -> JSXSpreadAttribute:
     python_data = []
     while not queue.peek_type(TokenType.JSX_CLOSE_BRACE):
         if queue.peek_type(TokenType.JSX_OPEN) or queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
-            children.append(PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1]))
-            python_data = []
+            if python_data:
+                children.append(
+                    PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1])
+                )
+                python_data = []
             children.append(parse_jsx(queue))
         else:
             python_data.append(queue.pop())
@@ -478,8 +540,11 @@ def parse_python_expression(queue: TokenQueue, *, pop_spread: bool = False) -> J
     python_data = []
     while not queue.peek_type(TokenType.JSX_CLOSE_BRACE):
         if queue.peek_type(TokenType.JSX_OPEN) or queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
-            children.append(PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1]))
-            python_data = []
+            if python_data:
+                children.append(
+                    PythonData("".join(token.value for token in python_data), python_data[0], python_data[-1])
+                )
+                python_data = []
             children.append(parse_jsx(queue))
         else:
             python_data.append(queue.pop())
@@ -531,25 +596,37 @@ class Parser:
         return PyJSXProgram(children)
 
 
+def unparse(node: Node) -> str:
+    return node.unparse()
+
+
 class Transpiler:
     def __init__(self, ast: PyJSXProgram):
         self.ast = ast
         self.output = StringIO()
         self.curr_map = None
-        self.source_map = {}
+        self.source_map = []
 
     def transpile(self) -> str:
-        start_offset = 0
         for ch in self.ast.children:
-            # sm = ch.source_map(start_offset)
-            # self.source_map |= sm
-            # start_offset = get_end_offset(sm)
             self.output.write(str(ch))
-
         return self.output.getvalue()
+
+    def transpile_sm(self):
+        for ch in self.ast.children:
+            transpiled, sm = ch.transpile()
+            self.output.write(transpiled)
+            self.source_map = concat(self.source_map, sm)
+        return self.output.getvalue(), self.source_map
 
 
 def transpile(source: str) -> str:
     ast = Parser(source).parse()
     transpiler = Transpiler(ast)
     return transpiler.transpile()
+
+
+def transpile_sm(source: str) -> tuple[str, list[OffsetMapping]]:
+    ast = Parser(source).parse()
+    transpiler = Transpiler(ast)
+    return transpiler.transpile_sm()

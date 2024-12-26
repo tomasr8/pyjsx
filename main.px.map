@@ -1,0 +1,12 @@
+{
+  "version": 3,
+  "sources": [
+    "main.px"
+  ],
+  "names": [],
+  "mappings": "AAAA,AACA,AACA,AACA;;;IAAI,IAAC,MAAC,IAAC,GAAK",
+  "file": "main.px",
+  "sourcesContent": [
+    "from pyjsx import jsx\n\n\nx = <p>{foo}</p>"
+  ]
+}

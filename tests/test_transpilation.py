@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from pyjsx.transpiler import transpile
+from pyjsx.transpiler import Parser, transpile, unparse
 
 
 @pytest.mark.parametrize(
@@ -236,3 +236,36 @@ def _get_stdlib_python_modules():
 def test_roundtrip(module_path):
     source = module_path.read_text("utf-8")
     assert transpile(source) == source
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "x = 1",
+        "<div></div>",
+        "<input />",
+        "<></>",
+        "<div>Hello, world!</div>",
+        "<div foo='bar'></div>",
+        "<div foo='bar' ham='spam'></div>",
+        "<input type='number' />",
+        "<button disabled>Hello, world!</button>",
+        "<div foo='bar' {...x}></div>",
+        "<input {...x} type='number' {...y} />",
+        "<button disabled {...x}>Hello, world!</button>",
+        "<input {...{'foo': 'bar'}} {...x.y} {...yield foo()} />",
+        "<div foo={'bar'} {...x}></div>",
+        "<input value={2+3} type='number' {...y} />",
+        "<button foo={[1, 2, 3]} disabled {...x}>Hello, world!</button>",
+        "<div foo=<b>bold</b>></div>",
+        "<div foo=<b>bold</b> bar=<a href='test.com'>link</a>></div>",
+        "<input frag=<></> type='number' {...y} />",
+        "<div><button></button></div>",
+        "<><b><i>test</i></b></>",
+        "<div><b>Hello, world!</b></div>",
+        '<div>Click<button>here</button>or<a href="example.com">there</a></div>',
+    ],
+)
+def test_unparse_roundtrip(source):
+    ast = Parser(source).parse()
+    assert unparse(ast) == source

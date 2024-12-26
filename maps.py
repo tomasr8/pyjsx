@@ -11,13 +11,15 @@ from pyjsx.transpiler import Parser
 #     {foo}
 # </p>"""
 
-source = """\
-<p>
-    lorem ipsum
-    <b>blah</b>
-    blah
-    {foo}
-</p>"""
+# source = """\
+# <p>
+#     lorem ipsum
+#     <b>blah</b>
+#     blah
+#     {foo}
+# </p>"""
+
+source = Path("main.px").read_text("utf-8")
 
 
 p = Parser(source)
@@ -32,8 +34,8 @@ for m in source_map:
 # print(source_map)
 source_map = convert_mappings(source_map, source, transpiled, name="main.px")
 generated = generate_source_map(source_map, sources=["main.px"], sources_content=[source], file="main.px")
-# print(transpiled)
+print(transpiled)
 
 
 Path("main.px.map").write_text(generated, "utf-8")
-Path("main.px").write_text(transpiled, "utf-8")
+Path("main.py").write_text(transpiled, "utf-8")

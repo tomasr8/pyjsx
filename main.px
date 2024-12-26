@@ -1,0 +1,4 @@
+from pyjsx import jsx
+
+
+x = <p foo={bar}>{foo}</p>
