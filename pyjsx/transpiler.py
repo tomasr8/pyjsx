@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from io import StringIO
-from typing import Any, TypeAlias
+from typing import Literal, TypeAlias
 
 from pyjsx.elements import is_builtin_element
 from pyjsx.source_maps.source_maps import OffsetMapping, concat, extend_last
@@ -36,7 +36,6 @@ class JSXAttributeLiteral(Node):
         return self.value
 
     def unparse(self) -> str:
-        # print("VAL", f"<<{self.value}>>")
         # return self.value.replace('"', r"\"")
         return self.value
 
@@ -44,8 +43,12 @@ class JSXAttributeLiteral(Node):
 @dataclass
 class JSXNamedAttribute(Node):
     name: str
-    value: JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment
+    value: JSXAttributeLiteral | JSXExpression | JSXElement | JSXFragment | Literal[True]
     name_token: Token
+
+    @property
+    def is_true(self) -> bool:
+        return self.value is True
 
     def transpile(self) -> tuple[str, list[OffsetMapping]]:
         transpiled = f'"{self.name}": '
@@ -55,7 +58,14 @@ class JSXNamedAttribute(Node):
         source_map = concat(source_map, source_map_value)
         return transpiled, source_map
 
+    def __str__(self):
+        if self.is_true:
+            return f'"{self.name}": True'
+        return f'"{self.name}": {self.value}'
+
     def unparse(self) -> str:
+        if self.is_true:
+            return self.name
         value = self.value.unparse()
         if value == "True":  # TODO fix this
             return self.name
@@ -91,6 +101,9 @@ class JSXSpreadAttribute(Node):
                 ),
             ]
         return transpiled, source_map
+
+    def __str__(self):
+        return f"**{self.value}"
 
     def unparse(self) -> str:
         value = self.value.unparse()
@@ -226,36 +239,11 @@ class JSXElement(Node):
         return transpiled, source_map
 
     def __str__(self):
-        condensed = []
-        curr = {}
-        for attr in self.attributes:
-            match attr:
-                case JSXNamedAttribute(name, value):
-                    curr[name] = value
-                case JSXSpreadAttribute(value):
-                    if curr:
-                        condensed.append(curr)
-                        curr = {}
-                    condensed.append(value)
-                case _:
-                    msg = "Invalid attribute"
-                    raise ParseError(msg)
-        if curr:
-            condensed.append(curr)
-
-        condensed = condensed or [{}]
-        attributes = " | ".join(self.sringify_attribute_dict(attrs) for attrs in condensed)
+        attributes = ", ".join(str(attr) for attr in self.attributes)
+        attributes = f"{{{attributes}}}"
         children = ", ".join(str(child) for child in self.children)
         tag = f'"{self.name}"' if is_builtin_element(self.name) else self.name
         return f"jsx({tag}, {attributes}, [{children}])"
-
-    def sringify_attribute_dict(self, attrs: dict[str, Any]) -> str:
-        if isinstance(attrs, JSXExpression | JSXElement | JSXFragment):
-            return f"({attrs})"
-        if not attrs:
-            return "{}"
-        kvs = ", ".join(f"'{k}': {v}" for k, v in attrs.items())
-        return f"{{{kvs}}}"
 
     def unparse(self) -> str:
         attributes = " ".join(attr.unparse() for attr in self.attributes)
@@ -492,7 +480,7 @@ def parse_named_attribute(queue: TokenQueue) -> JSXNamedAttribute:
         queue.pop()
         value = parse_jsx_attribute_value(queue)
     else:
-        value = JSXAttributeLiteral(value="True", token=name_token)
+        value = True
     return JSXNamedAttribute(name, value, name_token=name_token)
 
 

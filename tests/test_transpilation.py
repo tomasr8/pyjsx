@@ -25,15 +25,15 @@ def test_simple(source, expected):
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        ("<div foo='bar'></div>", "jsx(\"div\", {'foo': 'bar'}, [])"),
+        ('<div foo="bar"></div>', 'jsx("div", {"foo": "bar"}, [])'),
         (
-            "<div foo='bar' ham='spam'></div>",
-            "jsx(\"div\", {'foo': 'bar', 'ham': 'spam'}, [])",
+            '<div foo="bar" ham="spam"></div>',
+            'jsx("div", {"foo": "bar", "ham": "spam"}, [])',
         ),
-        ("<input type='number' />", "jsx(\"input\", {'type': 'number'}, [])"),
+        ('<input type="number" />', 'jsx("input", {"type": "number"}, [])'),
         (
             "<button disabled>Hello, world!</button>",
-            'jsx("button", {\'disabled\': True}, ["Hello, world!"])',
+            'jsx("button", {"disabled": True}, ["Hello, world!"])',
         ),
     ],
 )
@@ -44,18 +44,18 @@ def test_simple_attributes(source, expected):
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        ("<div foo='bar' {...x}></div>", "jsx(\"div\", {'foo': 'bar'} | (x), [])"),
+        ('<div foo="bar" {...x}></div>', 'jsx("div", {"foo": "bar", **x}, [])'),
         (
-            "<input {...x} type='number' {...y} />",
-            "jsx(\"input\", (x) | {'type': 'number'} | (y), [])",
+            '<input {...x} type="number" {...y} />',
+            'jsx("input", {**x, "type": "number", **y}, [])',
         ),
         (
             "<button disabled {...x}>Hello, world!</button>",
-            'jsx("button", {\'disabled\': True} | (x), ["Hello, world!"])',
+            'jsx("button", {"disabled": True, **x}, ["Hello, world!"])',
         ),
         (
             "<input {...{'foo': 'bar'}} {...x.y} {...yield foo()} />",
-            "jsx(\"input\", ({'foo': 'bar'}) | (x.y) | (yield foo()), [])",
+            "jsx(\"input\", {**{'foo': 'bar'}, **x.y, **yield foo()}, [])",
         ),
     ],
 )
@@ -66,14 +66,14 @@ def test_spread_attributes(source, expected):
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        ("<div foo={'bar'} {...x}></div>", "jsx(\"div\", {'foo': 'bar'} | (x), [])"),
+        ("<div foo={'bar'} {...x}></div>", 'jsx("div", {"foo": \'bar\', **x}, [])'),
         (
-            "<input value={2+3} type='number' {...y} />",
-            "jsx(\"input\", {'value': 2+3, 'type': 'number'} | (y), [])",
+            '<input value={2+3} type="number" {...y} />',
+            'jsx("input", {"value": 2+3, "type": "number", **y}, [])',
         ),
         (
             "<button foo={[1, 2, 3]} disabled {...x}>Hello, world!</button>",
-            "jsx(\"button\", {'foo': [1, 2, 3], 'disabled': True} | (x), [\"Hello, world!\"])",
+            'jsx("button", {"foo": [1, 2, 3], "disabled": True, **x}, ["Hello, world!"])',
         ),
     ],
 )
@@ -86,19 +86,19 @@ def test_expression_attributes(source, expected):
     [
         (
             "<div foo=<b>bold</b>></div>",
-            'jsx("div", {\'foo\': jsx("b", {}, ["bold"])}, [])',
+            'jsx("div", {"foo": jsx("b", {}, ["bold"])}, [])',
         ),
         (
             "<div foo=<b>bold</b> ></div>",
-            'jsx("div", {\'foo\': jsx("b", {}, ["bold"])}, [])',
+            'jsx("div", {"foo": jsx("b", {}, ["bold"])}, [])',
         ),
         (
-            "<div foo=<b>bold</b> bar=<a href='test.com'>link</a> ></div>",
-            'jsx("div", {\'foo\': jsx("b", {}, ["bold"]), \'bar\': jsx("a", {\'href\': \'test.com\'}, ["link"])}, [])',
+            '<div foo=<b>bold</b> bar=<a href="test.com">link</a> ></div>',
+            'jsx("div", {"foo": jsx("b", {}, ["bold"]), "bar": jsx("a", {"href": "test.com"}, ["link"])}, [])',
         ),
         (
-            "<input frag=<></> type='number' {...y} />",
-            "jsx(\"input\", {'frag': jsx(jsx.Fragment, {}, []), 'type': 'number'} | (y), [])",
+            '<input frag=<></> type="number" {...y} />',
+            'jsx("input", {"frag": jsx(jsx.Fragment, {}, []), "type": "number", **y}, [])',
         ),
     ],
 )

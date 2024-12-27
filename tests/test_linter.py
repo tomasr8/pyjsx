@@ -2,10 +2,10 @@ import pytest
 
 from pyjsx.linter import (
     Linter,
+    remove_duplicate_props,
     remove_empty_jsx_expressions,
     remove_empty_jsx_fragments,
     remove_fragments_with_single_child,
-    remove_duplicate_props,
     self_close_empty_components,
 )
 from pyjsx.transpiler import Parser, unparse

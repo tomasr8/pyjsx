@@ -2,7 +2,16 @@ import dataclasses
 from collections import defaultdict
 from typing import Any
 
-from pyjsx.transpiler import JSXElement, JSXExpression, JSXFragment, JSXNamedAttribute, JSXSpreadAttribute, Node, Parser
+from pyjsx.transpiler import (
+    JSXElement,
+    JSXExpression,
+    JSXFragment,
+    JSXNamedAttribute,
+    JSXSpreadAttribute,
+    Node,
+    Parser,
+    PythonData,
+)
 
 
 class NodeVisitor:
@@ -59,16 +68,25 @@ class Linter(NodeVisitor):
         return self.errors
 
     def visit_JSXExpression(self, node: JSXExpression) -> None:
+        self.generic_visit(node)
         if not node.children:
             self.errors.append((node, "Empty JSX expression"))
-        self.generic_visit(node)
 
     def visit_JSXElement(self, node: JSXElement) -> None:
+        self.generic_visit(node)
         self._check_duplicate_props(node.attributes)
         self._check_self_closing_empty_body(node)
+
+    def visit_JSXNamedAttribute(self, node: JSXNamedAttribute) -> None:
         self.generic_visit(node)
+        match node.value:
+            case JSXExpression(children=[PythonData(value="True")]):
+                self.errors.append((node, "Explicit boolean value can be omitted"))
+            case _:
+                pass
 
     def visit_JSXFragment(self, node: JSXFragment) -> None:
+        self.generic_visit(node)
         match node.children:
             case []:
                 self.errors.append((node, "Empty JSX fragment"))
@@ -76,8 +94,6 @@ class Linter(NodeVisitor):
                 self.errors.append((node, "Fragment with a single child"))
             case _:
                 pass
-
-        self.generic_visit(node)
 
     def _check_duplicate_props(self, attributes: list[JSXNamedAttribute | JSXSpreadAttribute]) -> None:
         dupes = defaultdict(list)
@@ -156,5 +172,18 @@ def self_close_empty_components(ast: Node) -> Node:
             if node.self_closing or node.children:
                 return node
             return dataclasses.replace(node, open_token2=None, close_token2=None)
+
+    return Transformer().visit(ast)
+
+
+def remove_boolean_prop_value(ast: Node) -> Node:
+    class Transformer(NodeTransformer):
+        def visit_JSXNamedAttribute(self, node: JSXNamedAttribute) -> Node:
+            self.generic_visit(node)
+            match node.value:
+                case JSXExpression(children=[PythonData(value="True")]):
+                    return dataclasses.replace(node, value=None)
+                case _:
+                    return node
 
     return Transformer().visit(ast)
