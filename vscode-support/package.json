@@ -35,10 +35,10 @@
         "scopeName": "source.pyjsx",
         "path": "./syntaxes/pyjsx.tmLanguage.json",
         "embeddedLanguages": {
-          "meta.tag.js": "python-jsx-tags",
-          "meta.tag.without-attributes.js": "python-jsx-tags",
-          "meta.tag.attributes.js.jsx": "pyjsx",
-          "meta.embedded.expression.js": "pyjsx"
+          "meta.tag.pyjsx": "python-jsx-tags",
+          "meta.tag.without-attributes.pyjsx": "python-jsx-tags",
+          "meta.tag.attributes.pyjsx.jsx": "pyjsx",
+          "meta.embedded.expression.pyjsx": "pyjsx"
         }
       },
       {

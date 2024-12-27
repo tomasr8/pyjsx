@@ -25,6 +25,21 @@ class Node:
 
 
 @dataclass
+class JSXComment:
+    value: str
+    token: Token
+
+    def transpile(self) -> tuple[str, list[OffsetMapping]]:
+        return "", []
+
+    def __str__(self):
+        return ""
+
+    def unparse(self) -> str:
+        return f"{{/*{self.value}*/}}"
+
+
+@dataclass
 class JSXAttributeLiteral(Node):
     value: str
     token: Token
@@ -113,7 +128,7 @@ class JSXSpreadAttribute(Node):
 
 @dataclass
 class JSXFragment(Node):
-    children: list[JSXElement | JSXFragment | JSXText | JSXExpression]
+    children: list[JSXElement | JSXFragment | JSXText | JSXExpression | JSXComment]
     open_token: Token
     close_token: Token
 
@@ -145,7 +160,7 @@ class JSXFragment(Node):
 class JSXElement(Node):
     name: str
     attributes: list[JSXNamedAttribute | JSXSpreadAttribute]
-    children: list[JSXElement | JSXFragment | JSXText | JSXExpression]
+    children: list[JSXElement | JSXFragment | JSXText | JSXExpression | JSXComment]
     open_token: Token
     close_token: Token
     name_token: Token
@@ -433,7 +448,12 @@ def parse_jsx_fragment(queue: TokenQueue) -> JSXFragment:
     return JSXFragment(children, open_token=open, close_token=close)
 
 
-def parse_jsx_children(queue: TokenQueue) -> list[JSXElement | JSXFragment | JSXText | JSXExpression]:
+def parse_jsx_comment(queue: TokenQueue) -> JSXComment:
+    tok = queue.pop_type(TokenType.JSX_COMMENT)
+    return JSXComment(tok.value, tok)
+
+
+def parse_jsx_children(queue: TokenQueue) -> list[JSXElement | JSXFragment | JSXText | JSXExpression | JSXComment]:
     children = []
     while not queue.peek_type(TokenType.JSX_SLASH_OPEN) and not queue.peek_type(TokenType.JSX_FRAGMENT_CLOSE):
         if queue.peek_type(TokenType.JSX_OPEN):
@@ -442,6 +462,8 @@ def parse_jsx_children(queue: TokenQueue) -> list[JSXElement | JSXFragment | JSX
             children.append(parse_jsx_fragment(queue))
         elif queue.peek_type(TokenType.JSX_OPEN_BRACE):
             children.append(parse_python_expression(queue))
+        elif queue.peek_type(TokenType.JSX_COMMENT):
+            children.append(parse_jsx_comment(queue))
         else:
             jsx_text = parse_jsx_text(queue)
             if jsx_text:

@@ -4232,50 +4232,50 @@
 			]
 		},
 		"jsx-tag-without-attributes": {
-			"name": "meta.tag.without-attributes.js.jsx",
+			"name": "meta.tag.without-attributes.pyjsx.jsx",
 			"begin": "(<)\\s*(?:([_$[:alpha:]][-_$[:alnum:].]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$[:alpha:]][-_$[:alnum:].]*))(?<!\\.|-))?\\s*(>)",
 			"end": "(</)\\s*(?:([_$[:alpha:]][-_$[:alnum:].]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$[:alpha:]][-_$[:alnum:].]*))(?<!\\.|-))?\\s*(>)",
 			"beginCaptures": {
 				"1": {
-					"name": "punctuation.definition.tag.begin.js.jsx"
+					"name": "punctuation.definition.tag.begin.pyjsx.jsx"
 				},
 				"2": {
-					"name": "entity.name.tag.namespace.js.jsx"
+					"name": "entity.name.tag.namespace.pyjsx.jsx"
 				},
 				"3": {
-					"name": "punctuation.separator.namespace.js.jsx"
+					"name": "punctuation.separator.namespace.pyjsx.jsx"
 				},
 				"4": {
-					"name": "entity.name.tag.js.jsx"
+					"name": "entity.name.tag.pyjsx.jsx"
 				},
 				"5": {
-					"name": "support.class.component.js.jsx"
+					"name": "support.class.component.pyjsx.jsx"
 				},
 				"6": {
-					"name": "punctuation.definition.tag.end.js.jsx"
+					"name": "punctuation.definition.tag.end.pyjsx.jsx"
 				}
 			},
 			"endCaptures": {
 				"1": {
-					"name": "punctuation.definition.tag.begin.js.jsx"
+					"name": "punctuation.definition.tag.begin.pyjsx.jsx"
 				},
 				"2": {
-					"name": "entity.name.tag.namespace.js.jsx"
+					"name": "entity.name.tag.namespace.pyjsx.jsx"
 				},
 				"3": {
-					"name": "punctuation.separator.namespace.js.jsx"
+					"name": "punctuation.separator.namespace.pyjsx.jsx"
 				},
 				"4": {
-					"name": "entity.name.tag.js.jsx"
+					"name": "entity.name.tag.pyjsx.jsx"
 				},
 				"5": {
-					"name": "support.class.component.js.jsx"
+					"name": "support.class.component.pyjsx.jsx"
 				},
 				"6": {
-					"name": "punctuation.definition.tag.end.js.jsx"
+					"name": "punctuation.definition.tag.end.pyjsx.jsx"
 				}
 			},
-			"contentName": "meta.jsx.children.js.jsx",
+			"contentName": "meta.jsx.children.pyjsx.jsx",
 			"patterns": [
 				{
 					"include": "#jsx-children"
@@ -4292,30 +4292,30 @@
 			]
 		},
 		"jsx-tag": {
-			"name": "meta.tag.js.jsx",
+			"name": "meta.tag.pyjsx.jsx",
 			"begin": "(?=(<)\\s*(?:([_$[:alpha:]][-_$[:alnum:].]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$[:alpha:]][-_$[:alnum:].]*))(?<!\\.|-))(?=((<\\s*)|(\\s+))(?!\\?)|\\/?>))",
 			"end": "(/>)|(?:(</)\\s*(?:([_$[:alpha:]][-_$[:alnum:].]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$[:alpha:]][-_$[:alnum:].]*))(?<!\\.|-))?\\s*(>))",
 			"endCaptures": {
 				"1": {
-					"name": "punctuation.definition.tag.end.js.jsx"
+					"name": "punctuation.definition.tag.end.pyjsx.jsx"
 				},
 				"2": {
-					"name": "punctuation.definition.tag.begin.js.jsx"
+					"name": "punctuation.definition.tag.begin.pyjsx.jsx"
 				},
 				"3": {
-					"name": "entity.name.tag.namespace.js.jsx"
+					"name": "entity.name.tag.namespace.pyjsx.jsx"
 				},
 				"4": {
-					"name": "punctuation.separator.namespace.js.jsx"
+					"name": "punctuation.separator.namespace.pyjsx.jsx"
 				},
 				"5": {
-					"name": "entity.name.tag.js.jsx"
+					"name": "entity.name.tag.pyjsx.jsx"
 				},
 				"6": {
-					"name": "support.class.component.js.jsx"
+					"name": "support.class.component.pyjsx.jsx"
 				},
 				"7": {
-					"name": "punctuation.definition.tag.end.js.jsx"
+					"name": "punctuation.definition.tag.end.pyjsx.jsx"
 				}
 			},
 			"patterns": [
@@ -4323,19 +4323,19 @@
 					"begin": "(<)\\s*(?:([_$[:alpha:]][-_$[:alnum:].]*)(?<!\\.|-)(:))?((?:[a-z][a-z0-9]*|([_$[:alpha:]][-_$[:alnum:].]*))(?<!\\.|-))(?=((<\\s*)|(\\s+))(?!\\?)|\\/?>)",
 					"beginCaptures": {
 						"1": {
-							"name": "punctuation.definition.tag.begin.js.jsx"
+							"name": "punctuation.definition.tag.begin.pyjsx.jsx"
 						},
 						"2": {
-							"name": "entity.name.tag.namespace.js.jsx"
+							"name": "entity.name.tag.namespace.pyjsx.jsx"
 						},
 						"3": {
-							"name": "punctuation.separator.namespace.js.jsx"
+							"name": "punctuation.separator.namespace.pyjsx.jsx"
 						},
 						"4": {
-							"name": "entity.name.tag.js.jsx"
+							"name": "entity.name.tag.pyjsx.jsx"
 						},
 						"5": {
-							"name": "support.class.component.js.jsx"
+							"name": "support.class.component.pyjsx.jsx"
 						}
 					},
 					"end": "(?=[/]?>)",
@@ -4352,11 +4352,11 @@
 					"begin": "(>)",
 					"beginCaptures": {
 						"1": {
-							"name": "punctuation.definition.tag.end.js.jsx"
+							"name": "punctuation.definition.tag.end.pyjsx.jsx"
 						}
 					},
 					"end": "(?=</)",
-					"contentName": "meta.jsx.children.js.jsx",
+					"contentName": "meta.jsx.children.pyjsx.jsx",
 					"patterns": [
 						{
 							"include": "#jsx-children"
@@ -4382,17 +4382,17 @@
 			]
 		},
 		"jsx-evaluated-code": {
-			"contentName": "meta.embedded.expression.js.jsx",
+			"contentName": "meta.embedded.expression.pyjsx.jsx",
 			"begin": "\\{",
 			"end": "\\}",
 			"beginCaptures": {
 				"0": {
-					"name": "punctuation.section.embedded.begin.js.jsx"
+					"name": "punctuation.section.embedded.begin.pyjsx.jsx"
 				}
 			},
 			"endCaptures": {
 				"0": {
-					"name": "punctuation.section.embedded.end.js.jsx"
+					"name": "punctuation.section.embedded.end.pyjsx.jsx"
 				}
 			},
 			"patterns": [
@@ -4404,21 +4404,21 @@
 		"jsx-entities": {
 			"patterns": [
 				{
-					"name": "constant.character.entity.js.jsx",
+					"name": "constant.character.entity.pyjsx.jsx",
 					"match": "(&)([a-zA-Z0-9]+|#[0-9]+|#x[0-9a-fA-F]+)(;)",
 					"captures": {
 						"1": {
-							"name": "punctuation.definition.entity.js.jsx"
+							"name": "punctuation.definition.entity.pyjsx.jsx"
 						},
 						"3": {
-							"name": "punctuation.definition.entity.js.jsx"
+							"name": "punctuation.definition.entity.pyjsx.jsx"
 						}
 					}
 				}
 			]
 		},
 		"jsx-tag-attributes": {
-			"name": "meta.tag.attributes.js.jsx",
+			"name": "meta.tag.attributes.pyjsx.jsx",
 			"begin": "\\s+",
 			"end": "(?=[/]?>)",
 			"patterns": [
@@ -4449,32 +4449,32 @@
 			"match": "(?x)\n  \\s*\n  (?:([_$[:alpha:]][-_$[:alnum:].]*)(:))?\n  ([_$[:alpha:]][-_$[:alnum:]]*)\n  (?=\\s|=|/?>|/\\*|//)",
 			"captures": {
 				"1": {
-					"name": "entity.other.attribute-name.namespace.js.jsx"
+					"name": "entity.other.attribute-name.namespace.pyjsx.jsx"
 				},
 				"2": {
-					"name": "punctuation.separator.namespace.js.jsx"
+					"name": "punctuation.separator.namespace.pyjsx.jsx"
 				},
 				"3": {
-					"name": "entity.other.attribute-name.js.jsx"
+					"name": "entity.other.attribute-name.pyjsx.jsx"
 				}
 			}
 		},
 		"jsx-tag-attribute-assignment": {
-			"name": "keyword.operator.assignment.js.jsx",
+			"name": "keyword.operator.assignment.pyjsx.jsx",
 			"match": "=(?=\\s*(?:'|\"|{|/\\*|//|\\n))"
 		},
 		"jsx-string-double-quoted": {
-			"name": "string.quoted.double.js.jsx",
+			"name": "string.quoted.double.pyjsx.jsx",
 			"begin": "\"",
 			"end": "\"",
 			"beginCaptures": {
 				"0": {
-					"name": "punctuation.definition.string.begin.js.jsx"
+					"name": "punctuation.definition.string.begin.pyjsx.jsx"
 				}
 			},
 			"endCaptures": {
 				"0": {
-					"name": "punctuation.definition.string.end.js.jsx"
+					"name": "punctuation.definition.string.end.pyjsx.jsx"
 				}
 			},
 			"patterns": [
@@ -4484,17 +4484,17 @@
 			]
 		},
 		"jsx-string-single-quoted": {
-			"name": "string.quoted.single.js.jsx",
+			"name": "string.quoted.single.pyjsx.jsx",
 			"begin": "'",
 			"end": "'",
 			"beginCaptures": {
 				"0": {
-					"name": "punctuation.definition.string.begin.js.jsx"
+					"name": "punctuation.definition.string.begin.pyjsx.jsx"
 				}
 			},
 			"endCaptures": {
 				"0": {
-					"name": "punctuation.definition.string.end.js.jsx"
+					"name": "punctuation.definition.string.end.pyjsx.jsx"
 				}
 			},
 			"patterns": [
@@ -4504,7 +4504,7 @@
 			]
 		},
 		"jsx-tag-attributes-illegal": {
-			"name": "invalid.illegal.attribute.js.jsx",
+			"name": "invalid.illegal.attribute.pyjsx.jsx",
 			"match": "\\S+"
 		}
 	}

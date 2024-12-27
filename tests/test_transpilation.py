@@ -264,6 +264,7 @@ def test_roundtrip(module_path):
         "<><b><i>test</i></b></>",
         "<div><b>Hello, world!</b></div>",
         '<div>Click<button>here</button>or<a href="example.com">there</a></div>',
+        "<p>{/* comment */}</p>",
     ],
 )
 def test_unparse_roundtrip(source):

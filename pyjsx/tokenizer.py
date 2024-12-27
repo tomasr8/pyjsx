@@ -24,6 +24,7 @@ NL = re.compile(r"\r?\n")
 WS = re.compile(r"^\s+")
 
 COMMENT = re.compile(r"^#[^\n]*", re.UNICODE)
+# JSX_COMMENT = re.compile(r"^<!--[^]*-->", re.UNICODE)
 SINGLE_LINE_STRING = re.compile(r"^[rRbBuU]*('[^']*')|(\"[^\"]*\")", re.UNICODE)
 EXPR_KEYWORDS = re.compile(r"^(else|yield|return)", re.UNICODE)
 NAME = re.compile(r"^[a-zA-Z_]\w*", re.UNICODE)
@@ -48,6 +49,7 @@ class TokenType(StrEnum):
     JSX_TEXT = "JSX_TEXT"
     JSX_OPEN_BRACE = "JSX_OPEN_BRACE"
     JSX_CLOSE_BRACE = "JSX_CLOSE_BRACE"
+    JSX_COMMENT = "JSX_COMMENT"
     ATTRIBUTE = "ATTRIBUTE"
     ATTRIBUTE_VALUE = "ATTRIBUTE_VALUE"
     WS = "WS"
@@ -187,6 +189,22 @@ class Tokenizer:
             self.mode.angle_brackets -= 1
             yield self.make_token(TokenType.JSX_SLASH_CLOSE, 2)
             self.advance(2)
+        elif self.source[self.curr: self.curr + 3] == "{/*":
+            start_index = self.curr
+            self.advance(3)
+            found = False
+            value = ""
+            while self.curr < len(self.source):
+                if self.source[self.curr : self.curr + 3] == "*/}":
+                    found = True
+                    self.advance(3)
+                    break
+                value += self.source[self.curr]
+                self.advance(1)
+            if not found:
+                msg = make_error_message("Unterminated comment", self.source, start_index, self.curr)
+                raise TokenizerError(msg)
+            yield self.make_token(TokenType.JSX_COMMENT, value=value, start=start_index, end=self.curr)
         elif self.source[self.curr] in {"<", ">"}:
             if self.source[self.curr] == "<":
                 if self.mode.is_inside_open_tag:

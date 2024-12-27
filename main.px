@@ -1,4 +1,16 @@
 from pyjsx import jsx
 
 
-x = <p foo={bar}>{foo}</p>
+x = 1
+y = 1
+
+x = <p foo={bar} x="asd">{foo}</p>
+
+y = <Header.Title foo>
+     <h1>Hello World</h1>
+    <h1>Hello World</h1>
+    <h1>Hello World</h1>
+    <h1>Hello World</h1>
+</Header.Title>
+
+z = <test></test>

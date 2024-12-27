@@ -6,7 +6,7 @@
 	],
 	"version": "https://github.com/MagicStack/MagicPython/commit/c9b3409deb69acec31bbf7913830e93a046b30cc",
 	"name": "MagicRegExp",
-	"scopeName": "source.regexp.python",
+	"scopeName": "source.regexp.pyjsx",
 	"patterns": [
 		{
 			"include": "#regexp-expression"
