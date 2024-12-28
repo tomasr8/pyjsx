@@ -95,6 +95,9 @@
 				},
 				{
 					"include": "#comments-base"
+				},
+				{
+					"include": "#jsx-comment"
 				}
 			]
 		},
@@ -4400,6 +4403,21 @@
 					"include": "#expression"
 				}
 			]
+		},
+		"jsx-comment": {
+			"name": "comment.block.pyjsx.jsx",
+			"begin": "(/\\*)(?:\\s*(?=\\s|(\\*/)))?",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.comment.pyjsx.jsx"
+				}
+			},
+			"end": "\\*/",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.pyjsx.jsx"
+				}
+			}
 		},
 		"jsx-entities": {
 			"patterns": [
