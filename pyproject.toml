@@ -12,7 +12,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    "click>=8.1.8",
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -30,12 +32,15 @@ dev = [
 Homepage = "https://github.com/tomasr8/pyjsx"
 Github = "https://github.com/tomasr8/pyjsx"
 
+[project.scripts]
+pyjsx = "pyjsx.cli:cli"
+
 [tool.pytest.ini_options]
 testpaths = ["tests/"]
 
 [tool.pyright]
 venvPath = "."
-venv = ".venv"
+venv = "venv"
 include = ["tests", "pyjsx"]
 exclude = ["pyjsx/codecs.py"] # Typeshed has incorrect types for `CodecInfo.decode`
 
