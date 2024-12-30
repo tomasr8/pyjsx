@@ -48,6 +48,3 @@ def transpile_file(path: Path) -> int:
     path.with_suffix(".py").write_text(transpiled)
     return 1
 
-
-if __name__ == "__main__":
-    cli()
