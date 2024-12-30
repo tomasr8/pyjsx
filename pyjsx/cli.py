@@ -16,34 +16,37 @@ def cli(*, version: bool) -> None:
 
 @cli.command()
 @click.argument("sources", type=click.Path(exists=True), nargs=-1)
-@click.option("-r", "--recursive", type=bool, default=True, help="Recurse into directories.")
+@click.option("-r", "--recursive", type=bool, is_flag=True, default=False, help="Recurse into directories.")
 def compile(sources: list[str], recursive: bool) -> None:
-    """Compile a PX file to a PY file."""
+    """Compile .px files to regular .py files."""
+    count = 0
     for source in sources:
         path = Path(source)
-        if path.is_dir():
-            transpile_dir(path, recursive=recursive)
-        elif path.suffix == ".px":
-            transpile_file(path)
-        else:
-            click.echo(f"Skipping {source} (not a PX file)")
-    click.echo("Compilation complete.")
+        count += transpile_dir(path, recursive=recursive)
+    msg = f"Compiled {count} file" + ("s" if count != 1 else "") + "."
+    click.secho(msg, fg="green", bold=True)
 
 
-def transpile_dir(path: Path, *, recursive: bool = False) -> None:
-    assert path.is_dir()
+def transpile_dir(path: Path, *, recursive: bool = False) -> int:
+    if path.is_file():
+        return transpile_file(path)
+    count = 0
     for file in path.iterdir():
         if file.is_dir() and recursive:
-            transpile_dir(file)
-        elif file.suffix == ".px":
-            transpile_file(file)
+            count += transpile_dir(file)
+        elif file.is_file() and file.suffix == ".px":
+            count += transpile_file(file)
+    return count
 
 
-def transpile_file(path: Path) -> None:
-    """Transpile a PX file to a PY file."""
-    assert path.suffix == ".px"
+def transpile_file(path: Path) -> int:
+    if path.suffix != ".px":
+        click.secho(f"Skipping {path} (not a .px file)", fg="yellow")
+        return 0
+    click.echo(f"Compiling {path}...")
     transpiled = transpile(path.read_text())
     path.with_suffix(".py").write_text(transpiled)
+    return 1
 
 
 if __name__ == "__main__":
