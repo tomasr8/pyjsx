@@ -24,8 +24,20 @@ class Node:
         raise NotImplementedError
 
 
+
 @dataclass
-class JSXComment:
+class ErrorNode(Node):
+    pass
+
+
+@dataclass
+class ValidNode:
+    def unparse(self) -> str:
+        raise NotImplementedError
+
+
+@dataclass
+class JSXComment(Node):
     value: str
     token: Token
 

@@ -90,7 +90,7 @@ class Linter(NodeVisitor):
         match node.children:
             case []:
                 self.errors.append((node, "Empty JSX fragment"))
-            case [_]:
+            case [JSXFragment() | JSXElement()]:
                 self.errors.append((node, "Fragment with a single child"))
             case _:
                 pass
@@ -113,6 +113,21 @@ class Linter(NodeVisitor):
 
         if not node.children:
             self.errors.append((node, "Empty components can be self-closing"))
+
+
+def lint(source: str) -> list[tuple[Node, str]]:
+    return Linter().lint(source)
+
+
+def fix(source: str) -> str:
+    node = Parser(source).parse()
+    node = remove_empty_jsx_expressions(node)
+    node = remove_empty_jsx_fragments(node)
+    node = remove_fragments_with_single_child(node)
+    node = remove_duplicate_props(node)
+    node = self_close_empty_components(node)
+    node = remove_boolean_prop_value(node)
+    return node.unparse()
 
 
 def remove_empty_jsx_expressions(ast: Node) -> Node:
@@ -141,9 +156,11 @@ def remove_fragments_with_single_child(ast: Node) -> Node:
     class Transformer(NodeTransformer):
         def visit_JSXFragment(self, node: JSXFragment) -> Node:
             self.generic_visit(node)
-            if len(node.children) == 1:
-                return node.children[0]
-            return node
+            match node.children:
+                case [JSXFragment() | JSXElement()]:
+                    return node.children[0]
+                case _:
+                    return node
 
     return Transformer().visit(ast)
 
@@ -182,7 +199,7 @@ def remove_boolean_prop_value(ast: Node) -> Node:
             self.generic_visit(node)
             match node.value:
                 case JSXExpression(children=[PythonData(value="True")]):
-                    return dataclasses.replace(node, value=None)
+                    return dataclasses.replace(node, value=True)
                 case _:
                     return node
 
