@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from typing import Any, Protocol, TypeAlias
 
 from pyjsx.elements import is_void_element

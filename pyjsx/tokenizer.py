@@ -216,7 +216,7 @@ class Tokenizer:
             yield Token(TokenType.JSX_TEXT, text, self.curr, self.curr + len(text))
             self.curr += len(text)
         else:
-            msg = f"Unexpected token {self.source[self.curr:]}"
+            msg = f"Unexpected token {self.source[self.curr :]}"
             raise TokenizerError(msg)
 
     def tokenize_py(self) -> Generator[Token, None, None]:  # noqa: C901, PLR0912, PLR0915
@@ -386,6 +386,6 @@ class Tokenizer:
                 else:
                     break
             if not middle:
-                msg = f"Unexpected token {self.source[self.curr:]}"
+                msg = f"Unexpected token {self.source[self.curr :]}"
                 raise TokenizerError(msg)
             yield Token(TokenType.FSTRING_MIDDLE, middle, self.curr, self.curr + len(middle))

@@ -1,11 +1,19 @@
+from __future__ import annotations  # noqa: A005
+
 import codecs
 import encodings
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from _typeshed import ReadableBuffer
 
 from pyjsx.transpiler import transpile
 
 
-def pyjsx_decode(input: memoryview, errors: str = "strict") -> tuple[str, int]:  # noqa: A002, ARG001
-    return transpile(bytes(input).decode("utf-8")), len(input)
+def pyjsx_decode(input: ReadableBuffer, errors: str = "strict") -> tuple[str, int]:  # noqa: A002, ARG001
+    byte_content = bytes(input)
+    return transpile(byte_content.decode("utf-8")), len(byte_content)
 
 
 def pyjsx_search_function(encoding: str) -> codecs.CodecInfo | None:
