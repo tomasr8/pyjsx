@@ -23,11 +23,10 @@ from types import ModuleType
 from pyjsx.transpiler import transpile
 
 
-class PyJSXLoader(FileLoader):
-    def __init__(self, name: str):
-        self.name = name
-        self.path = f"{name}.px"
+PYJSX_SUFFIX = ".px"
 
+
+class PyJSXLoader(FileLoader):
     def _compile(self) -> str:
         return transpile(Path(self.path).read_text("utf-8"))
 
@@ -46,14 +45,26 @@ class PyJSXFinder(MetaPathFinder):
         path: Sequence[str] | None,
         target: ModuleType | None = None,  # noqa: ARG002
     ) -> ModuleSpec | None:
-        filename = f"{fullname}.px"
-        if not Path(filename).exists():
-            return None
-        if path:
-            msg = "Only top-level imports are supported"
-            raise NotImplementedError(msg)
-        return importlib.util.spec_from_loader(fullname, PyJSXLoader(fullname))
+        if not path:
+            path = sys.path
+
+        for p in path:
+            if spec := self._spec_from_path(fullname, p):
+                return spec
+
+    def _spec_from_path(self, fullname: str, path: str) -> ModuleSpec | None:
+        last_segment = fullname.rsplit(".", maxsplit=1)[-1]
+        full_path = Path(path) / f"{last_segment}{PYJSX_SUFFIX}"
+        if full_path.exists():
+            loader = PyJSXLoader(fullname, str(full_path))
+            return importlib.util.spec_from_loader(fullname, loader)
 
 
 def register_import_hook() -> None:
+    """Register import hook for .px files."""
     sys.meta_path.append(PyJSXFinder())
+
+
+def unregister_import_hook() -> None:
+    """Unregister import hook for .px files."""
+    sys.meta_path = [finder for finder in sys.meta_path if not isinstance(finder, PyJSXFinder)]
