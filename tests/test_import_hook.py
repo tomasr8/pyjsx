@@ -22,7 +22,7 @@ def test_finder():
 
 @pytest.mark.usefixtures("import_hook")
 def test_import():
-    from .test_module import main
+    from .test_module import main  # type: ignore[reportAttributeAccessIssue]
 
     assert str(main.hello()) == """\
 <h1>
