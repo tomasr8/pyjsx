@@ -1,0 +1,4 @@
+from pyjsx import jsx
+
+def hello():
+    return <h1>Hello, World!</h1>
