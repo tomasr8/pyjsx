@@ -1,4 +1,3 @@
-# coding: jsx
 from pyjsx import jsx, JSX
 
 
