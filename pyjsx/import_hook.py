@@ -61,4 +61,10 @@ class PyJSXFinder(MetaPathFinder):
 
 
 def register_import_hook() -> None:
+    """Register import hook for .px files."""
     sys.meta_path.append(PyJSXFinder())
+
+
+def unregister_import_hook() -> None:
+    """Unregister import hook for .px files."""
+    sys.meta_path = [finder for finder in sys.meta_path if not isinstance(finder, PyJSXFinder)]

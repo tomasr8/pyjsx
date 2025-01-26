@@ -13,15 +13,18 @@ def run_example(name: str):
 
 
 @pytest.mark.parametrize(
-    "example",
+    ("example", "loader"),
     [
-        "table",
-        "props",
-        "custom",
+        ("table", "codec"),
+        ("table", "import_hook"),
+        ("props", "codec"),
+        ("props", "import_hook"),
+        ("custom_components", "codec"),
+        ("custom_components", "import_hook"),
     ],
 )
-def test_example(request, snapshot, example):
+def test_example(snapshot, example, loader):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     snapshot.assert_match(
-        run_example(example), f"examples-{request.node.callspec.id}.txt"
+        run_example(f"{example}_{loader}"), f"examples-{example}.txt"
     )

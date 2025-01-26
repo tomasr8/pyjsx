@@ -33,7 +33,13 @@ Get it via pip:
 pip install python-jsx
 ```
 
-## Minimal example
+## Minimal example (using the `coding` directive)
+
+> [!TIP]
+> There are more examples available in the [examples folder](examples).
+
+There are two supported ways to seamlessly integrate JSX into your codebase.
+One is by registering a custom codec shown here and the other by using a custom import hook shown [below](#minimal-example-using-an-import-hook).
 
 ```python
 # hello.py
@@ -58,9 +64,6 @@ $ python main.py
 <h1>Hello, word!</h1>
 ```
 
-> [!TIP]
-> There are more examples available in the [examples folder](examples).
-
 Each file containing JSX must contain two things:
 
 - `# coding: jsx` directive - This tells Python to let our library parse the
@@ -71,6 +74,42 @@ Each file containing JSX must contain two things:
 To run a file containing JSX, the `jsx` codec must be registered first which can
 be done with `from pyjsx import auto_setup`. This must occur before importing
 any other file containing JSX.
+
+## Minimal example (using an import hook)
+
+> [!TIP]
+> There are more examples available in the [examples folder](examples).
+
+```python
+# hello.px
+from pyjsx import jsx
+
+def hello():
+    print(<h1>Hello, world!</h1>)
+```
+
+```python
+# main.py
+from pyjsx import auto_setup
+
+from hello import hello
+
+hello()
+```
+
+```sh
+$ python main.py
+<h1>Hello, word!</h1>
+```
+
+Each file containing JSX must contain two things:
+
+- The file extension must be `.px`
+- `from pyjsx import jsx` import. PyJSX transpiles JSX into `jsx(...)` calls so
+  it must be in scope.
+
+To be able to import `.px`, the import hook must be registered first which can
+be done with `from pyjsx import auto_setup` (same as for the codec version). This must occur before importing any other file containing JSX.
 
 ## Supported grammar
 
