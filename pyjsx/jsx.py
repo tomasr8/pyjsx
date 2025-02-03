@@ -47,7 +47,19 @@ class JSXElement:
         return len(str(self))
 
     def __bytes__(self):
-        return str(self).encode('utf-8')
+        match self.tag:
+            case str():
+                return self.convert_builtin(self.tag).encode('utf-8')
+            case _:
+                return self.convert_component(self.tag).encode('utf-8')
+
+    def __add__(self, other):
+        return str(self) + str(other)
+
+    def __radd__(self, other):
+        if isinstance(other, bytes):
+            return other + bytes(self)
+        return NotImplemented
 
     def convert_prop(self, key: str, value: Any) -> str:
         if isinstance(value, bool):
