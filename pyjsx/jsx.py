@@ -53,14 +53,6 @@ class JSXElement:
             case _:
                 return self.convert_component(self.tag).encode('utf-8')
 
-    def __add__(self, other):
-        return str(self) + str(other)
-
-    def __radd__(self, other):
-        if isinstance(other, bytes):
-            return other + bytes(self)
-        return NotImplemented
-
     def encode(self, encoding='utf-8', errors='strict'):
         return str(self).encode(encoding, errors)
 
