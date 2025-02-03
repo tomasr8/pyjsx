@@ -61,6 +61,9 @@ class JSXElement:
             return other + bytes(self)
         return NotImplemented
 
+    def encode(self, encoding='utf-8', errors='strict'):
+        return str(self).encode(encoding, errors)
+
     def convert_prop(self, key: str, value: Any) -> str:
         if isinstance(value, bool):
             return key if value else ""
