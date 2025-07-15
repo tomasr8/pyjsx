@@ -43,6 +43,19 @@ class JSXElement:
             case _:
                 return self.convert_component(self.tag)
 
+    def __len__(self):
+        return len(str(self))
+
+    def __bytes__(self):
+        match self.tag:
+            case str():
+                return self.convert_builtin(self.tag).encode('utf-8')
+            case _:
+                return self.convert_component(self.tag).encode('utf-8')
+
+    def encode(self, encoding='utf-8', errors='strict'):
+        return str(self).encode(encoding, errors)
+
     def convert_prop(self, key: str, value: Any) -> str:
         if isinstance(value, bool):
             return key if value else ""
