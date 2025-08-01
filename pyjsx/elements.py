@@ -142,4 +142,4 @@ def is_void_element(tag: str) -> bool:
 
 
 def is_builtin_element(tag: str) -> bool:
-    return tag in builtin_elements
+    return tag in builtin_elements or "-" in tag

@@ -1,0 +1,5 @@
+<turbo-frame id="messages">
+    <h1>
+        Messages
+    </h1>
+</turbo-frame>

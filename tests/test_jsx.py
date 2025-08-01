@@ -88,3 +88,16 @@ def test_custom_components():
 )
 def test_attribute_escapes(source, expected):
     assert str(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (
+            jsx("turbo-frame", {"id": "messages"}, []),
+            '<turbo-frame id="messages"></turbo-frame>',
+        ),
+    ],
+)
+def test_custom_elements_rendering(source, expected):
+    assert str(source) == expected

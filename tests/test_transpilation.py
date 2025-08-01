@@ -251,3 +251,39 @@ def test_roundtrip(module_path):
 def test_mismatched_closing_tags():
     with pytest.raises(ParseError, match="Expected closing tag </div>, got </span>"):
         transpile("<div></span>")
+
+
+def test_unclosed_tag():
+    with pytest.raises(ParseError, match="No more tokens"):
+        transpile("<div>")
+
+
+def test_unclosed_tag_with_attributes():
+    with pytest.raises(ParseError, match="No more tokens"):
+        transpile("<div foo='bar'>")
+
+
+def test_unclosed_tag_with_children():
+    with pytest.raises(ParseError, match="No more tokens"):
+        transpile("<div><span />")
+
+
+def test_unclosed_fragment():
+    with pytest.raises(ParseError, match="No more tokens"):
+        transpile("<>")
+
+
+def test_unclosed_fragment_with_children():
+    with pytest.raises(ParseError, match="No more tokens"):
+        transpile("<><span />")
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("<turbo-frame></turbo-frame>", 'jsx("turbo-frame", {}, [])'),
+        ("<turbo-frame />", 'jsx("turbo-frame", {}, [])'),
+    ],
+)
+def test_custom_elements(source, expected):
+    assert transpile(source) == expected
