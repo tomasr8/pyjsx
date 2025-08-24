@@ -68,7 +68,7 @@ def test_attributes_names(request, snapshot, source):
 @pytest.mark.parametrize(
     "source",
     [
-        """
+        """\
 <div>
     Click <a>here</a>
     or
@@ -104,12 +104,12 @@ def test_mixed(request, snapshot, source):
 @pytest.mark.parametrize(
     "source",
     [
-        """
+        """\
 '''
 <>This should not be transpiled</>
 '''
 """,
-        """
+        """\
 '''
 <div {...x}>
     Neither this
@@ -117,12 +117,12 @@ def test_mixed(request, snapshot, source):
 </div>
 '''
 """,
-        '''
+        '''\
 """
 <>This should not be transpiled</>
 """
 ''',
-        '''
+        '''\
 """
 <div {...x}>
     Neither this
@@ -130,7 +130,7 @@ def test_mixed(request, snapshot, source):
 </div>
 """
 ''',
-        '''
+        '''\
 rB"""
 <div {...x}>
     Neither this
@@ -157,7 +157,7 @@ def test_multiline_strings(request, snapshot, source):
         'f"""test"""',
         "f'{1}'",
         'f"{1}+{1}={2}"',
-        'f"{f\"{1}\"}"',
+        'f"{f"{1}"}"',
         'f"""\nHello, {world}!\n"""',
         'f"Hello, {<b>world</b>}!"',
     ],
