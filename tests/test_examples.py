@@ -21,6 +21,8 @@ def run_example(name: str):
         ("props", "import_hook"),
         ("custom_components", "codec"),
         ("custom_components", "import_hook"),
+        ("custom_elements", "codec"),
+        ("custom_elements", "import_hook"),
     ],
 )
 def test_example(snapshot, example, loader):

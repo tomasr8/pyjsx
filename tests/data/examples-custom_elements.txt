@@ -1,5 +1,15 @@
-<turbo-frame id="messages">
+<site-header>
     <h1>
-        Messages
+        Hello, world!
     </h1>
-</turbo-frame>
+</site-header>
+<main-content>
+    <p>
+        This is a custom elements example.
+    </p>
+</main-content>
+<site-footer>
+    <p>
+        © 2025 My Company
+    </p>
+</site-footer>
