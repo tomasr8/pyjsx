@@ -15,7 +15,7 @@ else:
         pass
 
 
-ELEMENT_NAME = re.compile(r"^[a-zA-Z][\w-]*(?:\.[a-zA-Z][\w-]*)*")
+ELEMENT_NAME = re.compile(r"^[_a-zA-Z][\w-]*(?:\.[_a-zA-Z][\w-]*)*")
 ATTRIBUTE_NAME = re.compile(r"^[^\s='\"<>{}]+")
 ATTRIBUTE_STRING_VALUE = re.compile(r"^(?:'[^']*')|(?:\"[^\"]*\")")
 JSX_TEXT = re.compile(r"^[^<>\{\}]+")
@@ -211,6 +211,9 @@ class Tokenizer:
                 value = match.group()
                 yield Token(TokenType.ATTRIBUTE_VALUE, value, self.curr, self.curr + len(value))
                 self.curr += len(value)
+            else:
+                msg = f"Unexpected token {self.source[self.curr :]}"
+                raise TokenizerError(msg)
         elif match := JSX_TEXT.match(self.source[self.curr :]):
             text = match.group()
             yield Token(TokenType.JSX_TEXT, text, self.curr, self.curr + len(text))
