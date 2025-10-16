@@ -1,0 +1,8 @@
+from pyjsx import jsx, HTMLDontEscape
+
+def hello():
+    dangerous_attr = 'x" onclick="alert(1)"'
+    bad_key = {'quote"': True}
+    dangerous_text = "<script></script>"
+    safe_br = HTMLDontEscape("<br>")
+    return <h1 attr={dangerous_attr} {...bad_key}>Hello, World! {safe_br} {dangerous_text}</h1>

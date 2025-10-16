@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import html
+import re
 from typing import Any, Protocol, TypeAlias
 
 from pyjsx.elements import is_void_element
@@ -8,6 +10,8 @@ from pyjsx.util import flatten, indent
 
 __all__ = ["jsx"]
 
+
+VALID_KEY_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_.:-]*$")
 
 _Props: TypeAlias = dict[str, Any]
 
@@ -28,6 +32,16 @@ class JSXElement(Protocol):
     def __str__(self) -> str: ...
 
 
+class HTMLDontEscape(str):
+    __slots__ = ()
+
+
+def _escape(value: str) -> str:
+    if isinstance(value, HTMLDontEscape):
+        return value
+    return html.escape(value)
+
+
 def _format_css_rule(key: str, value: Any) -> str:
     return f"{key}: {value}"
 
@@ -41,12 +55,12 @@ def _preprocess_props(props: _Props) -> _Props:
 def _render_prop(key: str, value: Any) -> str:
     if isinstance(value, bool):
         return key if value else ""
-    value = str(value).replace('"', "&quot;")
+    value = _escape(str(value))
     return f'{key}="{value}"'
 
 
 def _render_props(props: _Props) -> str:
-    not_none = {k: v for k, v in props.items() if v is not None}
+    not_none = {k: v for k, v in props.items() if v is not None and VALID_KEY_REGEX.match(k)}
     return " ".join([_render_prop(k, v) for k, v in not_none.items()])
 
 
@@ -85,6 +99,7 @@ class _JSXElement:
             if is_void_element(tag):
                 return f"<{tag}{props} />"
             return f"<{tag}{props}></{tag}>"
+        children = [_escape(child) if isinstance(child, str) else child for child in children]
         children_formatted = "\n".join(indent(str(child)) for child in children)
         return f"<{tag}{props}>\n{children_formatted}\n</{tag}>"
 
@@ -94,6 +109,8 @@ class _JSXElement:
         match rendered:
             case tuple() | list():
                 return "\n".join(str(child) for child in rendered)
+            case str():
+                return _escape(rendered)
             case _:
                 return str(rendered)
 
