@@ -97,7 +97,7 @@ class TokenizerError(Exception):
 
 
 def make_error_message(msg: str, source: str, start: int, end: int) -> str:
-    line_number, offset = get_line_number_offset(source, start)
+    line_number, _ = get_line_number_offset(source, start)
     highlighted = highlight_line(source, start, end)
 
     return f"Error at line {line_number}:\n{highlighted}\n{msg}"
