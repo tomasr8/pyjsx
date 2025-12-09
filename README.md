@@ -3,7 +3,7 @@
 </p>
 
 # PyJSX - Write JSX directly in Python
-![PyPI - Version](https://img.shields.io/pypi/v/python-jsx)
+[![PyPI - Version](https://img.shields.io/pypi/v/python-jsx)](https://pypi.org/project/python-jsx/)
 
 ### 👉 We now have a [VSCode plugin](https://marketplace.visualstudio.com/items?itemName=tomasr8.pyjsx)!
 
