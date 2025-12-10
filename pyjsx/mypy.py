@@ -1,8 +1,8 @@
-from mypy.plugin import Plugin  # type: ignore[import-untyped]
+from mypy.plugin import Plugin
 
 
 class PyJSXPlugin(Plugin):
-    import pyjsx.auto_setup  # type: ignore[import-unused]
+    import pyjsx.auto_setup
 
 
 def plugin(_version: str) -> type[Plugin]:

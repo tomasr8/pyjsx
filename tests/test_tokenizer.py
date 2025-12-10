@@ -1,13 +1,14 @@
 import itertools
 from pathlib import Path
 from subprocess import PIPE, Popen
+from typing import Any
 
 import pytest
 
 from pyjsx.tokenizer import Tokenizer, TokenizerError
 
 
-def ruff_format(source):
+def ruff_format(source: str) -> str:
     p = Popen(["ruff", "format", "-"], shell=False, stdin=PIPE, stdout=PIPE, stderr=PIPE)  # noqa: S607
     output, err = p.communicate(source.encode("utf-8"))
     assert not err
@@ -24,7 +25,7 @@ def ruff_format(source):
     ],
     ids=itertools.count(1),
 )
-def test_simple(request, snapshot, source):
+def test_simple(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -39,7 +40,7 @@ def test_simple(request, snapshot, source):
     ],
     ids=itertools.count(1),
 )
-def test_element_names(request, snapshot, source):
+def test_element_names(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -58,7 +59,7 @@ def test_element_names(request, snapshot, source):
     ],
     ids=itertools.count(1),
 )
-def test_attributes_names(request, snapshot, source):
+def test_attributes_names(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -77,7 +78,7 @@ def test_attributes_names(request, snapshot, source):
     ],
     ids=itertools.count(1),
 )
-def test_nesting(request, snapshot, source):
+def test_nesting(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -94,7 +95,7 @@ def test_nesting(request, snapshot, source):
     ],
     ids=itertools.count(1),
 )
-def test_mixed(request, snapshot, source):
+def test_mixed(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -141,7 +142,7 @@ rB"""
     ],
     ids=itertools.count(1),
 )
-def test_multiline_strings(request, snapshot, source):
+def test_multiline_strings(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -163,7 +164,7 @@ def test_multiline_strings(request, snapshot, source):
     ],
     ids=itertools.count(1),
 )
-def test_fstrings(request, snapshot, source):
+def test_fstrings(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -180,7 +181,7 @@ def test_fstrings(request, snapshot, source):
     ],
     ids=itertools.count(1),
 )
-def test_errors(source, error_msg):
+def test_errors(source: str, error_msg: str) -> None:
     tokenizer = Tokenizer(source)
 
     with pytest.raises(TokenizerError) as excinfo:
@@ -199,7 +200,7 @@ def test_errors(source, error_msg):
         "<foo-- />",
     ],
 )
-def test_custom_elements(request, snapshot, source):
+def test_custom_elements(request: Any, snapshot: Any, source: str) -> None:
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     tokenizer = Tokenizer(source)
     tokens = list(tokenizer.tokenize())
@@ -215,7 +216,7 @@ def test_custom_elements(request, snapshot, source):
         "<- />",
     ],
 )
-def test_invalid_custom_elements(source):
+def test_invalid_custom_elements(source: str) -> None:
     tokenizer = Tokenizer(source)
     with pytest.raises(TokenizerError) as excinfo:
         list(tokenizer.tokenize())

@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -6,13 +7,13 @@ from pyjsx.import_hook import PyJSXFinder, register_import_hook, unregister_impo
 
 
 @pytest.fixture
-def import_hook():
+def import_hook() -> Iterator[None]:
     register_import_hook()
     yield
     unregister_import_hook()
 
 
-def test_finder():
+def test_finder() -> None:
     finder = PyJSXFinder()
     path = str(Path(__file__).parent / "test_module")
     spec = finder.find_spec("main", [path])
@@ -21,16 +22,19 @@ def test_finder():
 
 
 @pytest.mark.usefixtures("import_hook")
-def test_import():
-    from .test_module import main  # type: ignore[reportAttributeAccessIssue]
+def test_import() -> None:
+    from .test_module import main  # type: ignore[attr-defined]
 
-    assert str(main.hello()) == """\
+    assert (
+        str(main.hello())
+        == """\
 <h1>
     Hello, World!
 </h1>"""
+    )
 
 
 @pytest.mark.usefixtures("import_hook")
-def test_import_not_found():
+def test_import_not_found() -> None:
     with pytest.raises(ModuleNotFoundError):
-        from .foo import main  # type: ignore[reportAttributeAccessIssue] # noqa:F401
+        from .foo import main  # type: ignore[import-untyped] # noqa:F401

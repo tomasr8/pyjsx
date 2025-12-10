@@ -25,11 +25,11 @@ jobs:
 
       - name: Lint code 🧹
         run: |
-          uv run ruff check pyjsx/ tests/
+          uv run ruff check
 
       - name: Type check 🏷
         run: |
-          uv run ty check pyjsx/ tests/
+          uv run ty check
 
       - name: Run tests 🧪
         run: |

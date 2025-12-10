@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from io import StringIO
-from typing import Any
 
 from pyjsx.elements import is_builtin_element
 from pyjsx.tokenizer import Token, Tokenizer, TokenType
@@ -19,7 +18,7 @@ class ParseError(Exception):
 @dataclass
 class JSXNamedAttribute:
     name: str
-    value: str | JSXExpression | JSXElement | JSXFragment
+    value: JSXValue
 
 
 @dataclass
@@ -29,9 +28,9 @@ class JSXSpreadAttribute:
 
 @dataclass
 class JSXFragment:
-    children: list
+    children: list[JSXValue]
 
-    def __str__(self):
+    def __str__(self) -> str:
         children = ", ".join(str(child) for child in self.children)
         return f"jsx(jsx.Fragment, {{}}, [{children}])"
 
@@ -40,10 +39,10 @@ class JSXFragment:
 class JSXElement:
     name: str
     attributes: list[JSXNamedAttribute | JSXSpreadAttribute]
-    children: list
+    children: list[JSXValue]
 
-    def __str__(self):
-        condensed = []
+    def __str__(self) -> str:
+        condensed = list[JSXValue | dict[str, JSXValue]]()
         curr = {}
         for attr in self.attributes:
             match attr:
@@ -67,8 +66,8 @@ class JSXElement:
         return f"jsx({tag}, {attributes}, [{children}])"
 
 
-def sringify_attribute_dict(attrs: dict[str, Any]) -> str:
-    if isinstance(attrs, JSXExpression | JSXElement | JSXFragment):
+def sringify_attribute_dict(attrs: JSXValue | dict[str, JSXValue]) -> str:
+    if isinstance(attrs, JSXValue):
         return f"({attrs})"
     if not attrs:
         return "{}"
@@ -80,17 +79,20 @@ def sringify_attribute_dict(attrs: dict[str, Any]) -> str:
 class JSXText:
     value: str
 
-    def __str__(self):
+    def __str__(self) -> str:
         value = re.sub(UNESCAPED_QUOTES, '\\"', self.value)
         return f'"{value}"'
 
 
 @dataclass
 class JSXExpression:
-    children: list
+    children: list[JSXValue]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "".join(str(child) for child in self.children)
+
+
+JSXValue = JSXElement | JSXFragment | JSXExpression | JSXText | str
 
 
 class TokenQueue:
@@ -157,7 +159,7 @@ def parse_jsx_element(queue: TokenQueue) -> JSXElement:
         return JSXElement(name, attributes, [])
 
     queue.pop_type(TokenType.JSX_CLOSE)
-    children = []
+    children = list[JSXValue]()
     if not queue.peek_type(TokenType.JSX_SLASH_OPEN):
         children = parse_jsx_children(queue)
     queue.pop_type(TokenType.JSX_SLASH_OPEN)
@@ -178,8 +180,8 @@ def parse_jsx_fragment(queue: TokenQueue) -> JSXFragment:
     return JSXFragment(children)
 
 
-def parse_jsx_children(queue: TokenQueue) -> list:
-    children = []
+def parse_jsx_children(queue: TokenQueue) -> list[JSXValue]:
+    children = list[JSXValue]()
     while not queue.peek_type(TokenType.JSX_SLASH_OPEN) and not queue.peek_type(TokenType.JSX_FRAGMENT_CLOSE):
         if queue.peek_type(TokenType.JSX_OPEN):
             children.append(parse_jsx_element(queue))
@@ -205,8 +207,8 @@ def parse_jsx_text(queue: TokenQueue) -> JSXText | None:
     return JSXText(value)
 
 
-def parse_jsx_attributes(queue: TokenQueue) -> list:
-    attributes = []
+def parse_jsx_attributes(queue: TokenQueue) -> list[JSXNamedAttribute | JSXSpreadAttribute]:
+    attributes = list[JSXNamedAttribute | JSXSpreadAttribute]()
     while not queue.peek_type(TokenType.JSX_CLOSE) and not queue.peek_type(TokenType.JSX_SLASH_CLOSE):
         if queue.peek_type(TokenType.ATTRIBUTE):
             attributes.append(parse_named_attribute(queue))
@@ -249,7 +251,7 @@ def parse_python_expression(queue: TokenQueue, *, pop_spread: bool = False) -> J
     queue.pop_type(TokenType.JSX_OPEN_BRACE)
     if pop_spread:
         queue.pop_type(TokenType.JSX_SPREAD)
-    children = []
+    children = list[JSXValue]()
     while not queue.peek_type(TokenType.JSX_CLOSE_BRACE):
         if queue.peek_type(TokenType.JSX_OPEN) or queue.peek_type(TokenType.JSX_FRAGMENT_OPEN):
             children.append(parse_jsx(queue))

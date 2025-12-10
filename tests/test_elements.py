@@ -17,5 +17,5 @@ from pyjsx.elements import is_builtin_element
         ("-", True),
     ],
 )
-def test_builtin_elements(elem, is_builtin):
+def test_builtin_elements(elem: str, *, is_builtin: bool) -> None:
     assert is_builtin_element(elem) == is_builtin

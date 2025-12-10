@@ -52,12 +52,15 @@ class PyJSXFinder(MetaPathFinder):
             if spec := self._spec_from_path(fullname, p):
                 return spec
 
+        return None
+
     def _spec_from_path(self, fullname: str, path: str) -> ModuleSpec | None:
         last_segment = fullname.rsplit(".", maxsplit=1)[-1]
         full_path = Path(path) / f"{last_segment}{PYJSX_SUFFIX}"
         if full_path.exists():
             loader = PyJSXLoader(fullname, str(full_path))
             return importlib.util.spec_from_loader(fullname, loader)
+        return None
 
 
 def register_import_hook() -> None:
