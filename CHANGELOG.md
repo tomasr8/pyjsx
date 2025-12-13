@@ -2,7 +2,12 @@
 
 ## Unreleased
 
-- Nothing yet
+- Nothing yet ;)
+
+## 0.4.0
+
+- Proper HTML escaping ([#16](https://github.com/tomasr8/pyjsx/pull/16), thanks @leontrolski)
+- New class `HTMLDontEscape` to turn off HTML escaping for safe input ([#16](https://github.com/tomasr8/pyjsx/pull/16), thanks @leontrolski)
 
 ## 0.3.0
 
