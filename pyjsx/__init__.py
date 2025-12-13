@@ -3,5 +3,5 @@ from pyjsx.jsx import JSX, HTMLDontEscape, JSXComponent, jsx
 from pyjsx.transpiler import transpile
 
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __all__ = ["JSX", "HTMLDontEscape", "JSXComponent", "jsx", "register_jsx", "transpile"]
