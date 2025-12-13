@@ -12,14 +12,14 @@ def run_example(source: str, _locals: dict[str, Any] | None = None) -> str:
     return out
 
 
-def test_passing_jsx_as_props() -> None:
-    def CardWithImageComponent(image: JSX | None = None, **_: Any) -> JSX:
+def test_passing_jsx_as_props():
+    def CardWithImageComponent(image: JSX | None = None, **_) -> JSX:
         return jsx("div", {}, [image])
 
-    def CardWithImageCallable(image: JSXComponent, **_: Any) -> JSX:
+    def CardWithImageCallable(image: JSXComponent, **_) -> JSX:
         return jsx("div", {}, [jsx(image, {}, [])])
 
-    def Image(src: str = "example.jpg", alt: str | None = None, **_: Any) -> JSX:
+    def Image(src: str = "example.jpg", alt: str | None = None, **_) -> JSX:
         return jsx("img", {"src": src, "alt": alt}, [])
 
     html = run_example("str(<Card />)", {"Card": CardWithImageComponent, "Image": Image})

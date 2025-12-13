@@ -4,7 +4,6 @@ import sys
 import warnings
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -20,7 +19,7 @@ from pyjsx.transpiler import ParseError, transpile
         ("<div>Hello, world!</div>", 'jsx("div", {}, ["Hello, world!"])'),
     ],
 )
-def test_simple(source: str, expected: str) -> None:
+def test_simple(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -39,7 +38,7 @@ def test_simple(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_simple_attributes(source: str, expected: str) -> None:
+def test_simple_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -61,7 +60,7 @@ def test_simple_attributes(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_spread_attributes(source: str, expected: str) -> None:
+def test_spread_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -79,7 +78,7 @@ def test_spread_attributes(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_expression_attributes(source: str, expected: str) -> None:
+def test_expression_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -104,7 +103,7 @@ def test_expression_attributes(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_jsx_attributes(source: str, expected: str) -> None:
+def test_jsx_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -123,7 +122,7 @@ def test_jsx_attributes(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_simple_nesting(source: str, expected: str) -> None:
+def test_simple_nesting(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -142,7 +141,7 @@ def test_simple_nesting(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_multiple_children(source: str, expected: str) -> None:
+def test_multiple_children(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -184,7 +183,7 @@ def App():
     ],
     ids=itertools.count(1),
 )
-def test_multiline(snapshot: Any, request: Any, source: str) -> None:
+def test_multiline(snapshot, request, source: str):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     snapshot.assert_match(transpile(source), f"transpiler-multiline-{request.node.callspec.id}.txt")
 
@@ -198,7 +197,7 @@ def test_multiline(snapshot: Any, request: Any, source: str) -> None:
         "'''''\\''''",
     ],
 )
-def test_string_escapes(source: str) -> None:
+def test_string_escapes(source: str):
     assert transpile(source) == source
 
 
@@ -208,7 +207,7 @@ def test_string_escapes(source: str) -> None:
         ('<li>"quoted text"</li>', 'jsx("li", {}, ["\\"quoted text\\""])'),
     ],
 )
-def test_jsx_text_escapes(source: str, expected: str) -> None:
+def test_jsx_text_escapes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -218,7 +217,7 @@ def test_jsx_text_escapes(source: str, expected: str) -> None:
         ("<li><>foo</></li>", 'jsx("li", {}, [jsx(jsx.Fragment, {}, ["foo"])])'),
     ],
 )
-def test_child_fragments(source: str, expected: str) -> None:
+def test_child_fragments(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -245,37 +244,37 @@ def _get_stdlib_python_modules() -> Iterator[Path]:
 
 
 @pytest.mark.parametrize("module_path", _get_stdlib_python_modules())
-def test_roundtrip(module_path: Path) -> None:
+def test_roundtrip(module_path: Path):
     source = module_path.read_text("utf-8")
     assert transpile(source) == source
 
 
-def test_mismatched_closing_tags() -> None:
+def test_mismatched_closing_tags():
     with pytest.raises(ParseError, match="Expected closing tag </div>, got </span>"):
         transpile("<div></span>")
 
 
-def test_unclosed_tag() -> None:
+def test_unclosed_tag():
     with pytest.raises(ParseError, match="No more tokens"):
         transpile("<div>")
 
 
-def test_unclosed_tag_with_attributes() -> None:
+def test_unclosed_tag_with_attributes():
     with pytest.raises(ParseError, match="No more tokens"):
         transpile("<div foo='bar'>")
 
 
-def test_unclosed_tag_with_children() -> None:
+def test_unclosed_tag_with_children():
     with pytest.raises(ParseError, match="No more tokens"):
         transpile("<div><span />")
 
 
-def test_unclosed_fragment() -> None:
+def test_unclosed_fragment():
     with pytest.raises(ParseError, match="No more tokens"):
         transpile("<>")
 
 
-def test_unclosed_fragment_with_children() -> None:
+def test_unclosed_fragment_with_children():
     with pytest.raises(ParseError, match="No more tokens"):
         transpile("<><span />")
 
@@ -287,5 +286,5 @@ def test_unclosed_fragment_with_children() -> None:
         ("<turbo-frame />", 'jsx("turbo-frame", {}, [])'),
     ],
 )
-def test_custom_elements(source: str, expected: str) -> None:
+def test_custom_elements(source: str, expected: str):
     assert transpile(source) == expected

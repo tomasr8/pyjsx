@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from pyjsx.jsx import JSX, jsx
@@ -22,7 +20,7 @@ last""",
         ),
     ],
 )
-def test_fragments(source: str, expected: str) -> None:
+def test_fragments(source: str, expected: str):
     assert str(source) == expected
 
 
@@ -61,12 +59,12 @@ def test_fragments(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_builtins(source: str, expected: str) -> None:
+def test_builtins(source: str, expected: str):
     assert str(source) == expected
 
 
-def test_custom_components() -> None:
-    def Component(children: list[JSX], **_: Any) -> JSX:
+def test_custom_components():
+    def Component(children: list[JSX], **_) -> JSX:
         return jsx("div", {"class": "wrapper"}, children)
 
     source = jsx(Component, {}, ["Hello, world!"])
@@ -88,7 +86,7 @@ def test_custom_components() -> None:
         ),
     ],
 )
-def test_attribute_escapes(source: str, expected: str) -> None:
+def test_attribute_escapes(source: str, expected: str):
     assert str(source) == expected
 
 
@@ -101,5 +99,5 @@ def test_attribute_escapes(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_custom_elements_rendering(source: str, expected: str) -> None:
+def test_custom_elements_rendering(source: str, expected: str):
     assert str(source) == expected

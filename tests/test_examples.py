@@ -1,7 +1,6 @@
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -26,6 +25,6 @@ def run_example(name: str) -> str:
         ("custom_elements", "import_hook"),
     ],
 )
-def test_example(snapshot: Any, example: str, loader: str) -> None:
+def test_example(snapshot, example: str, loader: str):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     snapshot.assert_match(run_example(f"{example}_{loader}"), f"examples-{example}.txt")

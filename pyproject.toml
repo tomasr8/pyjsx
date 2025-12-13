@@ -65,6 +65,11 @@ exclude = ["examples"]
 packages = ["pyjsx", "tests"]
 strict = true
 
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
 [tool.hatch.version]
 path = "pyjsx/__init__.py"
 
