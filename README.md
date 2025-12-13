@@ -166,6 +166,18 @@ header = <Header>Title</Header>
 print(header)
 ```
 
+### Preventing HTML escaping
+
+By default, PyJSX escapes all string content to prevent XSS attacks. To render raw HTML, wrap strings with `HTMLDontEscape`:
+
+```python
+from pyjsx import jsx, HTMLDontEscape
+
+safe_html = HTMLDontEscape("<strong>Bold text</strong>")
+element = <div>{safe_html}</div>
+print(element)  # <div><strong>Bold text</strong></div>
+```
+
 ## VS Code support
 
 PyJSX comes with a [VS Code plugin](https://marketplace.visualstudio.com/items?itemName=tomasr8.pyjsx) that provides syntax highlighting.

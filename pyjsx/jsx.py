@@ -58,6 +58,7 @@ class JSXElement(Protocol):
 
 
 class HTMLDontEscape(str):
+    """A string wrapper that prevents HTML escaping when rendering JSX."""
     __slots__ = ()
 
 
