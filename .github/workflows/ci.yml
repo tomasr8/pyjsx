@@ -27,9 +27,13 @@ jobs:
         run: |
           uv run ruff check
 
-      - name: Type check 🏷
+      - name: Type check with ty 🏷
         run: |
           uv run ty check
+
+      - name: Type chec with mypy 🏷
+        run: |
+          uv run mypy
 
       - name: Run tests 🧪
         run: |

@@ -38,10 +38,12 @@ ruff check
 
 ### Type checking
 
-You can also check your code with ty:
+You can also check your code with ty/mypy:
 
 ```sh
 uv run ty check
+uv run mypy
 # Or with the venv activated:
 ty check
+mypy
 ```
