@@ -10,8 +10,33 @@ from pyjsx.util import flatten, indent
 
 __all__ = ["jsx"]
 
-
-VALID_KEY_REGEX = re.compile(r"^[a-zA-Z][a-zA-Z0-9_.:-]*$")
+# See https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
+# Attribute names must consist of one or more characters other than controls"
+_CONTROLS = r"\u0000-\u001F\u007F-\u009F"
+# Or U+0020 SPACE, U+0022 ("), U+0027 ('), U+003E (>), U+002F (/), U+003D (=)
+_OTHER_INVALID = r"\u0020\u0022\u0027\u003E\u002F\u003D"
+# Or noncharacters
+_NON_CHARACTERS = (
+    r"\uFDD0-\uFDEF"
+    r"\uFFFE\uFFFF"
+    r"\U0001FFFE\U0001FFFF"
+    r"\U0002FFFE\U0002FFFF"
+    r"\U0003FFFE\U0003FFFF"
+    r"\U0004FFFE\U0004FFFF"
+    r"\U0005FFFE\U0005FFFF"
+    r"\U0006FFFE\U0006FFFF"
+    r"\U0007FFFE\U0007FFFF"
+    r"\U0008FFFE\U0008FFFF"
+    r"\U0009FFFE\U0009FFFF"
+    r"\U000AFFFE\U000AFFFF"
+    r"\U000BFFFE\U000BFFFF"
+    r"\U000CFFFE\U000CFFFF"
+    r"\U000DFFFE\U000DFFFF"
+    r"\U000EFFFE\U000EFFFF"
+    r"\U000FFFFE\U000FFFFF"
+    r"\U0010FFFE\U0010FFFF"
+)
+VALID_KEY_REGEX = re.compile(f"^[^{_CONTROLS}{_OTHER_INVALID}{_NON_CHARACTERS}]+$")
 
 _Props: TypeAlias = dict[str, Any]
 
