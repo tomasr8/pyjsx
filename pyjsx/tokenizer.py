@@ -57,7 +57,7 @@ class TokenType(StrEnum):
     FSTRING_END = "FSTRING_END"
     ANY = "ANY"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value
 
 

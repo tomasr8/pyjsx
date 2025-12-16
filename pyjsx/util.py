@@ -1,11 +1,15 @@
 from collections.abc import Generator, Iterable
+from typing import TypeVar
+
+
+T = TypeVar("T")
 
 
 def indent(text: str, spaces: int = 4) -> str:
     return "\n".join(f"{' ' * spaces}{line}" for line in text.split("\n"))
 
 
-def flatten(children: Iterable) -> Generator:
+def flatten(children: Iterable[T]) -> Generator[T]:
     for child in children:
         if isinstance(child, list | tuple):
             yield from flatten(child)

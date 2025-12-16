@@ -101,11 +101,11 @@ class _JSXElement:
         self.props = props
         self.children = children
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         tag = self.tag if isinstance(self.tag, str) else self.tag.__name__
         return f"<{tag} />"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.render()
 
     def render(self) -> str:

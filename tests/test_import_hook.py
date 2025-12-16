@@ -22,15 +22,18 @@ def test_finder():
 
 @pytest.mark.usefixtures("import_hook")
 def test_import():
-    from .test_module import main  # type: ignore[reportAttributeAccessIssue]
+    from .test_module import main  # type: ignore[attr-defined]
 
-    assert str(main.hello()) == """\
+    assert (
+        str(main.hello())
+        == """\
 <h1>
     Hello, World!
 </h1>"""
+    )
 
 
 @pytest.mark.usefixtures("import_hook")
 def test_import_not_found():
     with pytest.raises(ModuleNotFoundError):
-        from .foo import main  # type: ignore[reportAttributeAccessIssue] # noqa:F401
+        from .foo import main  # type: ignore[import-untyped] # noqa:F401

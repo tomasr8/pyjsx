@@ -12,7 +12,7 @@ def import_hook():
 
 @pytest.mark.usefixtures("import_hook")
 def test_import():
-    from .test_module import escaping  # type: ignore[reportAttributeAccessIssue]
+    from .test_module import escaping  # type: ignore[reportAttributeAccessIssue,attr-defined,unused-ignore]
 
     assert (
         str(escaping.hello())

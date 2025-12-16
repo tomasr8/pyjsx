@@ -31,18 +31,19 @@ pytest
 This project uses ruff, you can run it as:
 
 ```sh
-uv run ruff check pyjsx/ tests/
+uv run ruff check
 # Or with the venv activated:
-ruff check pyjsx/ tests/
+ruff check
 ```
 
 ### Type checking
 
-You can also check your code with ty:
+You can also check your code with ty/mypy:
 
 ```sh
-uv run ty check pyjsx/ tests/
+uv run ty check
+uv run mypy
 # Or with the venv activated:
-ty check pyjsx/ tests/
+ty check
+mypy
 ```
-

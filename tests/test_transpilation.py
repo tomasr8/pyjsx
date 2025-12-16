@@ -2,6 +2,7 @@ import contextlib
 import itertools
 import sys
 import warnings
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,7 @@ from pyjsx.transpiler import ParseError, transpile
         ("<div>Hello, world!</div>", 'jsx("div", {}, ["Hello, world!"])'),
     ],
 )
-def test_simple(source, expected):
+def test_simple(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -37,7 +38,7 @@ def test_simple(source, expected):
         ),
     ],
 )
-def test_simple_attributes(source, expected):
+def test_simple_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -59,7 +60,7 @@ def test_simple_attributes(source, expected):
         ),
     ],
 )
-def test_spread_attributes(source, expected):
+def test_spread_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -77,7 +78,7 @@ def test_spread_attributes(source, expected):
         ),
     ],
 )
-def test_expression_attributes(source, expected):
+def test_expression_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -102,7 +103,7 @@ def test_expression_attributes(source, expected):
         ),
     ],
 )
-def test_jsx_attributes(source, expected):
+def test_jsx_attributes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -121,7 +122,7 @@ def test_jsx_attributes(source, expected):
         ),
     ],
 )
-def test_simple_nesting(source, expected):
+def test_simple_nesting(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -140,7 +141,7 @@ def test_simple_nesting(source, expected):
         ),
     ],
 )
-def test_multiple_children(source, expected):
+def test_multiple_children(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -182,7 +183,7 @@ def App():
     ],
     ids=itertools.count(1),
 )
-def test_multiline(snapshot, request, source):
+def test_multiline(snapshot, request, source: str):
     snapshot.snapshot_dir = Path(__file__).parent / "data"
     snapshot.assert_match(transpile(source), f"transpiler-multiline-{request.node.callspec.id}.txt")
 
@@ -196,7 +197,7 @@ def test_multiline(snapshot, request, source):
         "'''''\\''''",
     ],
 )
-def test_string_escapes(source):
+def test_string_escapes(source: str):
     assert transpile(source) == source
 
 
@@ -206,7 +207,7 @@ def test_string_escapes(source):
         ('<li>"quoted text"</li>', 'jsx("li", {}, ["\\"quoted text\\""])'),
     ],
 )
-def test_jsx_text_escapes(source, expected):
+def test_jsx_text_escapes(source: str, expected: str):
     assert transpile(source) == expected
 
 
@@ -216,11 +217,11 @@ def test_jsx_text_escapes(source, expected):
         ("<li><>foo</></li>", 'jsx("li", {}, [jsx(jsx.Fragment, {}, ["foo"])])'),
     ],
 )
-def test_child_fragments(source, expected):
+def test_child_fragments(source: str, expected: str):
     assert transpile(source) == expected
 
 
-def _get_stdlib_python_modules():
+def _get_stdlib_python_modules() -> Iterator[Path]:
     modules = sys.stdlib_module_names
     for name in modules:
         if name == "antigravity":
@@ -243,7 +244,7 @@ def _get_stdlib_python_modules():
 
 
 @pytest.mark.parametrize("module_path", _get_stdlib_python_modules())
-def test_roundtrip(module_path):
+def test_roundtrip(module_path: Path):
     source = module_path.read_text("utf-8")
     assert transpile(source) == source
 
@@ -285,5 +286,5 @@ def test_unclosed_fragment_with_children():
         ("<turbo-frame />", 'jsx("turbo-frame", {}, [])'),
     ],
 )
-def test_custom_elements(source, expected):
+def test_custom_elements(source: str, expected: str):
     assert transpile(source) == expected
