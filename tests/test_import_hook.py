@@ -22,7 +22,7 @@ def test_finder():
 
 @pytest.mark.usefixtures("import_hook")
 def test_import():
-    from .test_module import main  # type: ignore[attr-defined]
+    from .test_module import main  # type: ignore[attr-defined]  # ty: ignore[unresolved-import]
 
     assert (
         str(main.hello())
@@ -36,4 +36,4 @@ def test_import():
 @pytest.mark.usefixtures("import_hook")
 def test_import_not_found():
     with pytest.raises(ModuleNotFoundError):
-        from .foo import main  # type: ignore[import-untyped] # noqa:F401
+        from .foo import main  # type: ignore[import-untyped] # noqa:F401  # ty: ignore[unresolved-import]
