@@ -32,7 +32,7 @@ jobs:
         run: |
           uv run ty check
 
-      - name: Type chec with mypy 🏷
+      - name: Type check with mypy 🏷
         run: |
           uv run mypy
 
