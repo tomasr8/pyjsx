@@ -1,3 +1,22 @@
+# Elements whose text content must not be altered by pretty-printing.
+# See https://html.spec.whatwg.org/multipage/parsing.html#parsing-html-fragments
+rcdata_elements = {
+    "textarea",
+    "title",
+}
+
+rawtext_elements = {
+    "script",
+    "style",
+    "iframe",
+    "noembed",
+    "noframes",
+    "noscript",
+    "xmp",
+}
+
+text_content_elements = rcdata_elements | rawtext_elements
+
 void_elements = {
     "area",
     "base",
@@ -139,6 +158,10 @@ builtin_elements = {
 
 def is_void_element(tag: str) -> bool:
     return tag in void_elements
+
+
+def is_text_content_element(tag: str) -> bool:
+    return tag in text_content_elements
 
 
 def is_builtin_element(tag: str) -> bool:

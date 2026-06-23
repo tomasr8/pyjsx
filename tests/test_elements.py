@@ -1,6 +1,21 @@
 import pytest
 
-from pyjsx.elements import is_builtin_element
+from pyjsx.elements import is_builtin_element, is_text_content_element
+
+
+@pytest.mark.parametrize(
+    ("elem", "is_text_content"),
+    [
+        ("textarea", True),
+        ("title", True),
+        ("script", True),
+        ("style", True),
+        ("div", False),
+        ("span", False),
+    ],
+)
+def test_text_content_elements(elem: str, *, is_text_content: bool):
+    assert is_text_content_element(elem) == is_text_content
 
 
 @pytest.mark.parametrize(

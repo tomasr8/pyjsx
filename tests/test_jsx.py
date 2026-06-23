@@ -101,3 +101,41 @@ def test_attribute_escapes(source: str, expected: str):
 )
 def test_custom_elements_rendering(source: str, expected: str):
     assert str(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (
+            jsx("textarea", {"name": "body"}, ["line1\n\nline2"]),
+            '<textarea name="body">line1\n\nline2</textarea>',
+        ),
+        (
+            jsx("script", {}, ['console.log("hi")']),
+            "<script>console.log(&quot;hi&quot;)</script>",
+        ),
+        (
+            jsx("style", {}, ["body { margin: 0; }"]),
+            "<style>body { margin: 0; }</style>",
+        ),
+        (
+            jsx("title", {}, ["Page Title"]),
+            "<title>Page Title</title>",
+        ),
+        (
+            jsx(
+                "form",
+                {},
+                [jsx("textarea", {"name": "body"}, ["line1\n\nline2"])],
+            ),
+            """\
+<form>
+    <textarea name="body">line1
+
+line2</textarea>
+</form>""",
+        ),
+    ],
+)
+def test_text_content_elements_rendering(source: str, expected: str):
+    assert str(source) == expected
