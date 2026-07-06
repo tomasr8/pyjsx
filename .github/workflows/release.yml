@@ -17,10 +17,10 @@ jobs:
       id-token: write
 
     steps:
-    - uses: actions/checkout@v6.0.3
+    - uses: actions/checkout@v7.0.0
 
     - name: Install the latest version of uv and set the python version
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@v8.2.0
       with:
         python-version: '3.14'
 
