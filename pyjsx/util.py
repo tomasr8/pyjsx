@@ -16,6 +16,13 @@ def indent(text: str, spaces: int = 4) -> str:
     return "\n".join(f"{' ' * spaces}{line}" for line in text.split("\n"))
 
 
+def indent_first_line_only(text: str, spaces: int = 4) -> str:
+    lines = text.split("\n")
+    if len(lines) == 1:
+        return f"{' ' * spaces}{lines[0]}"
+    return f"{' ' * spaces}{lines[0]}\n" + "\n".join(lines[1:])
+
+
 def flatten(children: Iterable[Nested[T]]) -> Generator[T]:
     for child in children:
         if isinstance(child, list | tuple):

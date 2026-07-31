@@ -4,8 +4,8 @@ import html
 import re
 from typing import Any, Protocol, TypeAlias
 
-from pyjsx.elements import is_void_element
-from pyjsx.util import flatten, indent
+from pyjsx.elements import is_text_content_element, is_void_element
+from pyjsx.util import flatten, indent, indent_first_line_only
 
 
 __all__ = ["jsx"]
@@ -125,9 +125,20 @@ class _JSXElement:
             if is_void_element(tag):
                 return f"<{tag}{props} />"
             return f"<{tag}{props}></{tag}>"
+        if is_text_content_element(tag):
+            children_formatted = "".join(
+                _escape(child) if isinstance(child, str) else str(child) for child in children
+            )
+            return f"<{tag}{props}>{children_formatted}</{tag}>"
+
         children = [_escape(child) if isinstance(child, str) else child for child in children]
-        children_formatted = "\n".join(indent(str(child)) for child in children)
+        children_formatted = "\n".join(self._format_pretty_child(child) for child in children)
         return f"<{tag}{props}>\n{children_formatted}\n</{tag}>"
+
+    def _format_pretty_child(self, child: JSX) -> str:
+        if isinstance(child, _JSXElement) and isinstance(child.tag, str) and is_text_content_element(child.tag):
+            return indent_first_line_only(str(child))
+        return indent(str(child))
 
     def render_custom_component(self, tag: JSXComponent | JSXFragment) -> str:
         """Render a custom component which is a callable that returns JSX."""
