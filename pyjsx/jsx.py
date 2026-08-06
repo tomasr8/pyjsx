@@ -42,14 +42,14 @@ _Props: TypeAlias = dict[str, Any]
 
 
 class JSXComponent(Protocol):
-    __name__: str
-
+    @property
+    def __name__(self) -> str: ...
     def __call__(self, *, children: list[JSX], **rest: Any) -> JSX: ...
 
 
 class JSXFragment(Protocol):
-    __name__: str
-
+    @property
+    def __name__(self) -> str: ...
     def __call__(self, *, children: list[JSX], **rest: Any) -> list[JSX]: ...
 
 
