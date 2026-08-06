@@ -47,12 +47,6 @@ class JSXComponent(Protocol):
     def __call__(self, *, children: list[JSX], **rest: Any) -> JSX: ...
 
 
-class JSXFragment(Protocol):
-    @property
-    def __name__(self) -> str: ...
-    def __call__(self, *, children: list[JSX], **rest: Any) -> list[JSX]: ...
-
-
 class JSXElement(Protocol):
     def __str__(self) -> str: ...
 
@@ -93,7 +87,7 @@ def _render_props(props: _Props) -> str:
 class _JSXElement:
     def __init__(
         self,
-        tag: str | JSXComponent | JSXFragment,
+        tag: str | JSXComponent,
         props: _Props,
         children: list[JSX],
     ):
@@ -129,7 +123,7 @@ class _JSXElement:
         children_formatted = "\n".join(indent(str(child)) for child in children)
         return f"<{tag}{props}>\n{children_formatted}\n</{tag}>"
 
-    def render_custom_component(self, tag: JSXComponent | JSXFragment) -> str:
+    def render_custom_component(self, tag: JSXComponent) -> str:
         """Render a custom component which is a callable that returns JSX."""
         rendered = tag(**self.props, children=self.children)
         match rendered:
@@ -144,7 +138,7 @@ class _JSXElement:
 class _JSX:
     def __call__(
         self,
-        tag: str | JSXComponent | JSXFragment,
+        tag: str | JSXComponent,
         props: _Props,
         children: list[JSX],
     ) -> JSXElement:
