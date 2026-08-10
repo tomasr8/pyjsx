@@ -85,7 +85,7 @@ dev = [
     "pytest==9.1.1",
     "pytest-snapshot==0.9.0",
     "pytest-cov==7.1.0",
-    "ruff==0.15.22",
-    "ty==0.0.61",
+    "ruff==0.16.1",
+    "ty==0.0.65",
     "mypy==2.3.0",
 ]
