@@ -77,7 +77,7 @@ path = "pyjsx/__init__.py"
 packages = ["pyjsx"]
 
 [build-system]
-requires = ["hatchling==1.31.0"]
+requires = ["hatchling==1.32.0"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
@@ -85,7 +85,7 @@ dev = [
     "pytest==9.1.1",
     "pytest-snapshot==0.9.0",
     "pytest-cov==7.1.0",
-    "ruff==0.15.22",
-    "ty==0.0.61",
-    "mypy==2.3.0",
+    "ruff==0.16.3",
+    "ty==0.0.72",
+    "mypy==2.3.1",
 ]
